@@ -8,7 +8,7 @@ compound_components:
       depth: "must_specify"
       n_rw_ports: 1
       global_cycle_seconds: "must_specify"
-
+    
     subcomponents:
     - name: storage
       class: SRAM
@@ -18,7 +18,7 @@ compound_components:
         n_rw_ports: n_rw_ports
         technology: technology
         global_cycle_seconds: global_cycle_seconds
-    
+            
     # We don't need to scale the address generators
     - name: address_generator
       class: intadder
@@ -28,7 +28,7 @@ compound_components:
         precision: max(1, ceil(log2(depth))) if depth >= 1 else 1
         datawidth: max(1, ceil(log2(depth))) if depth >= 1 else 1
         global_cycle_seconds: global_cycle_seconds
-
+    
     actions:
     - &write_action
       name: write 
@@ -51,3 +51,273 @@ compound_components:
         actions: [{name: leak}]
     - name: update
       << : *write_action # Update is the same as write
+    
+  - name: A_Buffer
+    attributes:
+      technology: "must_specify"
+      width: "must_specify"
+      depth: "must_specify"
+      banks: "must_specify"
+      n_rw_ports: banks * 2
+
+    subcomponents: 
+    - name: storage[1..banks]
+      class: SRAM
+      attributes:
+        width: width
+        depth: depth
+        n_rw_ports: 2
+        technology: technology
+    
+    - name: address_generator
+      class: intadder
+      attributes:
+        n_instances: 1
+        n_bits: max(1, ceil(log2(depth))) if depth >= 1 else 1
+        precision: max(1, ceil(log2(depth))) if depth >= 1 else 1
+        datawidth: max(1, ceil(log2(depth))) if depth >= 1 else 1
+        global_cycle_seconds: global_cycle_seconds
+    actions:
+    - name: read
+      arguments:
+        data_delta: 0..1
+        address_delta: 0..banks
+      subcomponents:
+      - name: storage[1..banks]
+        actions:
+        - name: read
+          arguments:
+            data_delta: data_delta
+            address_delta: address_delta
+      - name: address_generators
+        actions:
+        - name: add
+    
+  - name: B_Buffer
+    attributes:
+      technology: "must_specify"
+      width: "must_specify"
+      depth: "must_specify"
+      n_rw_ports: 2
+
+    subcomponents: 
+    - name: storage
+      class: SRAM
+      attributes:
+        width: width
+        depth: depth
+        n_rw_ports: 2
+        technology: technology
+
+    - name: address_generator
+      class: intadder
+      attributes:
+        n_instances: 1
+        n_bits: max(1, ceil(log2(depth))) if depth >= 1 else 1
+        precision: max(1, ceil(log2(depth))) if depth >= 1 else 1
+        datawidth: max(1, ceil(log2(depth))) if depth >= 1 else 1
+        global_cycle_seconds: global_cycle_seconds
+    actions:
+    - name: read
+      subcomponents:
+      - name: storage
+        actions: [{name: read}]
+      - name: address_generators
+        actions: [{name: add}]
+    
+  - name: vec_mac
+    attributes:
+      technology: "must_specify"
+      datawidth: "must_specify"
+      num_macs: 256 / datawidth
+      quantization: 0
+      output_width: "must_specify"
+    subcomponents: 
+    - name: macs[1..num_macs]
+      class: mac_unit_csv
+      attributes:
+        width: datawidth
+        depth: 1
+    - name: partial_sum_adder
+      class: intadder
+      attributes: 
+        technology: technology
+        datawidth: 24
+    - name: vsq_scaling
+      attributes: 
+        technology: technology
+      subcomponents: 
+      - name: scale_scale_mult
+        class: intmultiplier
+        attributes: 
+          technology: technology
+          datawidth: 8
+      - name: scale_sum_mult
+        class: intmultiplier
+        attributes:
+          technology: technology
+          datawidth: 22
+      actions: 
+      - name: compute
+        subcomponents: 
+        - name: scale_scale_mult
+          actions: [{name: mult_random}]
+        - name: scale_sum_mult
+          actions: [{name: mult_random}]
+    actions: 
+    - name: compute
+      subcomponents:
+      - name: macs[1..num_macs]
+        actions: [{name: compute}]
+      - name: partial_sum_adder
+        actions: [{name: add}]
+      - name: vsq_scaling
+        actions: [{name: compute}]
+    - name: leak
+      subcomponents:
+      - name: macs[1..num_macs]
+        actions: [{name: leak}]
+      - name: partial_sum_adder
+        actions: [{name: leak}]
+
+  - name: PPU
+    attributes: 
+      technology: "must_specify"
+    subcomponents: 
+    - name: matrix_scaling[1..16]
+      class: intmultiplier
+      attributes: 
+        technology: technology
+        datawidth: 40
+    - name: bias_addition[1..16]
+      class: intadder
+      attributes:
+        technology: technology
+        datawidth: 40
+    - name: relu[1..16]
+      class: comparator
+      attributes:
+        technology: technology
+        datawidth: 40
+    - name: truncation_vec_max[1..16]
+      class: bitwise
+      attributes:
+        technology: technology
+        datawidth: 40
+    - name: quantize_and_round[1..16]
+      class: bitwise
+      attributes:
+        technology: technology
+        datawidth: 40
+    - name: approx_softmax[1..16]
+      class: intmultiplier
+      attributes:
+        technology: technology
+        datawidth: 16
+    - name: scale_buffer
+      class: regfile
+      attributes: 
+        technology: technology
+        width: 256
+        depth: 8
+    - name: bias_buffer
+      class: regfile
+      attributes: 
+        technology: technology
+        width: 128
+        depth: 8
+    - name: vsq_buffer
+      class: regfile
+      attributes: 
+        technology: technology
+        width: 296
+        depth: 16
+    actions: 
+    - name: compute
+      subcomponents: 
+      - name: matrix_scaling[1..16]
+        actions: [{name: mult_random}]
+      - name: bias_addition[1..16]
+        actions: [{name: add}]
+      - name: relu[1..16]
+        actions: [{name: compare}]
+      - name: truncation_vec_max[1..16]
+        actions: [{name: process}]
+      - name: quantize_and_round[1..16]
+        actions: [{name: process}]
+      - name: approx_softmax[1..16]
+        actions: [{name: mult_random}]
+      - name: scale_buffer
+        actions: [{name: read}]
+      - name: bias_buffer
+        actions: [{name: read}]
+      - name: vsq_buffer
+        actions: [{name: read}, {name: write}]
+    - name: read_buffer
+      subcomponents: 
+      - name: scale_buffer
+        actions: [{name: write}]
+      - name: bias_buffer
+        actions: [{name: write}]
+
+  - name: global_pe
+    attributes:
+      scratchpad_width: "must_specify"
+      scratchpad_depth: "must_specify"
+      num_pes: "must_specify"
+      technology: technology
+    subcomponents:
+    - name: address_generator
+      class: intadder
+      attributes:
+        n_instances: 1
+        n_bits: max(1, ceil(log2(depth))) if depth >= 1 else 1
+        precision: max(1, ceil(log2(depth))) if depth >= 1 else 1
+        datawidth: max(1, ceil(log2(depth))) if depth >= 1 else 1
+    - name: scratchpad
+      class: SRAM
+      attributes: 
+        width: scratchpad_width
+        depth: scratchpad_depth
+        technology: technology
+    actions:
+    - name: read
+      subcomponents:
+      - name: address_generator
+        actions: [{name: add}]
+      - name: scratchpad
+        actions: [{name: read}]
+    - name: write
+      subcomponents:
+      - name: address_generator
+        actions: [{name: add}]
+      - name: scratchpad
+        actions: [{name: write}]
+
+  - name: custom_intadder
+    class: intadder
+    attributes: 
+      technology: "must_specify"
+      datawidth: 16
+    # subcomponents:
+    # - name: adder
+    #   class: intadder
+    #   attributes:
+    #     n_instances: 1
+    #     n_bits: datawidth
+    # actions:
+    # - name: add
+    #   subcomponents:
+    #   - name: adder
+    #     actions: [{name: add}]
+      
+
+  
+        
+              
+    
+    
+    
+      
+        
+          
