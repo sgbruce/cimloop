@@ -30,13 +30,23 @@ architecture:
 
   - !Parallel
     nodes:
+    - !Component
+      name: A_Buffer
+      <<<: [*component_defaults, *keep_weights]
+      subclass: A_Buffer
+      attributes:
+        width: 264
+        depth: 128
+        banks: 16
+        
     - !Component 
       name: B_Buffer
-      <<<: [*component_defaults, *keep_weights]
+      <<<: [*component_defaults, *keep_inputs]
       subclass: B_Buffer
       attributes:
         width: 264
         depth: 2048
+        
     - !Hierarchical
       nodes:
       - !Component
@@ -52,87 +62,21 @@ architecture:
         subclass: PPU
         <<<: [*component_defaults, *keep_outputs]
 
-  - !Container
-    name: multiply
+  - !Component
+    name: vec_mac
+    subclass: vec_mac
+    <<<: [*component_defaults, *keep_inputs, *keep_weights]
+    attributes: 
+      technology: TECHNOLOGY
+      datawidth: 8
+      output_width: 21
 
   - !Component # Each PE in the column receives a different filter row
     name: accumulator
-    <<<: [*component_defaults, *keep_outputs]
+    <<<: [*component_defaults, *keep_outputs, *keep_inputs]
     class: regfile
     attributes:
         width: 384
         depth: 16
         n_rdwr_ports: 2
-
-  - !Container
-    name: vector_mac_with_sram
-    spatial: {meshX: 16}
-
-  - !Component
-    name: address_gen
-    subclass: custom_intadder
-    attributes: 
-      technology: TECHNOLOGY
-      datawidth: 8
-
-  - !Component
-    name: weight_SRAM
-    <<<: [*component_defaults, *keep_weights]
-    class: SRAM
-    attributes:
-      technology: TECHNOLOGY
-      width: 264
-      depth: 128
-
-  - !Component
-    name: mac_register
-    <<<: [*component_defaults, *keep_weights]
-    class: reg
-    attributes: 
-      technology: TECHNOLOGY
-      datawidth: 264
-
-  - !Component
-    name: scale_factor_compute
-    <<<: [*component_defaults, *keep_inputs, *keep_weights]
-    class: intmultiplier
-    attributes:
-      technology: TECHNOLOGY
-      datawidth: 8
-
-  - !Component
-    name: scale_factor_mult
-    <<<: [*component_defaults, *keep_inputs, *keep_weights]
-    class: intmultiplier
-    attributes:
-      technology: TECHNOLOGY
-      datawidth: 14
-
-  - !Component
-    name: partial_sum_add
-    <<<: [*component_defaults, *keep_outputs]
-    subclass: custom_intadder
-    attributes:
-      technology: TECHNOLOGY
-      datawidth: 24
-
-  #   nodes:
-  #   - !Component
-  #     name: mac_op_8_bit
-  #     <<<: [*component_defaults, *keep_inputs, *keep_weights]
-  #     class: intmac
-  #     attributes:
-  #       technology: TECHNOLOGY
-  #       datawidth: 8
-  #     spatial: {meshX: 32}
-
-  - !Component
-    name: mac_op_4_bit
-    <<<: [*component_defaults, *keep_inputs, *keep_weights]
-    class: intmac
-    attributes:
-      technology: TECHNOLOGY
-      datawidth: 4
-    spatial: {meshX: 64}
-        
 
