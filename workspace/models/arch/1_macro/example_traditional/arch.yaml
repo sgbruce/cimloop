@@ -1,4 +1,4 @@
-{{include_text('defines.yaml')}}
+l{{include_text('defines.yaml')}}
 
 architecture:
   nodes: &macro # TOP MACRO
@@ -23,60 +23,104 @@ architecture:
     attributes: 
       scratchpad_width: 264
       scratchpad_depth: 4096
-
+      
   - !Container # accelerator
     name: vsqutie
     spatial: {meshX: 4, meshY: 4}
 
-  - !Parallel
+  - !Hierarchical
     nodes:
     - !Component
-      name: A_Buffer
-      <<<: [*component_defaults, *keep_weights]
-      subclass: A_Buffer
+      name: output_buffer
+      <<<: [*component_defaults, *keep_outputs]
+      class: SRAM
       attributes:
-        width: 264
-        depth: 128
-        banks: 16
-        
-    - !Component 
-      name: B_Buffer
-      <<<: [*component_defaults, *keep_inputs]
-      subclass: B_Buffer
-      attributes:
-        width: 264
-        depth: 2048
-        
-    - !Hierarchical
-      nodes:
-      - !Component
-        name: output_buffer
-        <<<: [*component_defaults, *keep_outputs]
-        class: SRAM
-        attributes:
-          depth: 512
-          width: 136
-          n_rdwr_ports: 1
-      - !Component
-        name: PPU
-        subclass: PPU
-        <<<: [*component_defaults, *keep_outputs]
+        depth: 512
+        width: 136
+        n_rdwr_ports: 1
+    - !Component
+      name: PPU
+      subclass: PPU
+      <<<: [*component_defaults, *keep_outputs]
 
-  - !Component
-    name: vec_mac
-    subclass: vec_mac
-    <<<: [*component_defaults, *keep_inputs, *keep_weights]
-    attributes: 
-      technology: TECHNOLOGY
-      datawidth: 8
-      output_width: 21
 
   - !Component # Each PE in the column receives a different filter row
     name: accumulator
-    <<<: [*component_defaults, *keep_outputs, *keep_inputs]
+    <<<: [*component_defaults, *keep_outputs]
     class: regfile
     attributes:
         width: 384
         depth: 16
         n_rdwr_ports: 2
+        
+  - !Component
+    name: B_Buffer
+    <<<: [*component_defaults, *keep_inputs]
+    subclass: B_Buffer
+    attributes:
+      width: 16
+      depth: 1
+      n_rw_ports: 2
+
+  - !Container # vector lane w/ buffer
+    name: vec_mac_lane
+    spatial: {meshX: 16}
+
+  - !Component 
+    name: A_Buffer
+    <<<: [*component_defaults, *keep_weights]
+    subclass: A_Buffer
+    attributes:
+      width: 264
+      depth: 128
+      banks: 1
+      
+  - !Component
+    name: mac_weight_register
+    <<<: [*component_defaults, *keep_weights]
+    subclass: reg # for whatever reason, reg requires subclass
+    attributes:
+      datawidth: 264
+
+  # - !Component
+  #   name: scale_factor
+  #   <<<: [*component_defaults, *keep_weights]
+  #   subclass: custom_intmultiplier
+  #   attributes:
+  #     datawidth:8
+      
+  - !Component
+    name: scale_factor_compute
+    <<<: [*component_defaults, *keep_inputs, *keep_weights]
+    subclass: intmultiplier
+    attributes:
+      # technology: TECHNOLOGY
+      datawidth: 8
+
+  - !Component
+    name: scale_factor_mult
+    <<<: [*component_defaults, *keep_inputs, *keep_weights]
+    subclass: intmultiplier
+    attributes:
+      technology: TECHNOLOGY
+      datawidth: 14
+
+  - !Component
+    name: partial_sum_add
+    <<<: [*component_defaults, *keep_outputs]
+    subclass: intadder
+    attributes:
+      technology: TECHNOLOGY
+      datawidth: 24
+
+  - !Component
+    name: mac_op_4_bit
+    <<<: [*component_defaults, *keep_inputs, *keep_weights]
+    class: intmac
+    attributes:
+      technology: TECHNOLOGY
+      datawidth: 4
+    spatial: {meshX: 64}
+      
+
 
