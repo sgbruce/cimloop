@@ -26,17 +26,8 @@ architecture:
     attributes:
       depth: 16384
       width: 64
-      n_banks: 32
       read_bandwidth: 128 # bits/cycle
       write_bandwidth: 128 # bits/cycle
-
-  - !Component # Quantize outputs before sending them to the GLB
-    name: output_quantize
-    <<<: [*component_defaults, *keep_outputs, *no_coalesce]
-    subclass: output_quantizer
-    attributes:
-      width: 16
-      depth: INF # Depth doesn't matter
 
   - !Container # Each column stores a different weight slice. Columns share inputs.
     name: PE_column

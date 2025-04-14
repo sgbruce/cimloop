@@ -1,0 +1,6 @@
+mapping: 
+  version: 0.4
+  - target: vec_mac_lane
+    type: spatial
+    permutation:
+    - M
