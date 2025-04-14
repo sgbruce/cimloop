@@ -21,8 +21,8 @@ architecture:
     <<<: [*component_defaults]
     subclass: global_pe
     attributes: 
-      scratchpad_width: 264
-      scratchpad_depth: 4096
+      width: 264
+      depth: 4096
       
   - !Container # accelerator
     name: vsqutie
@@ -55,7 +55,9 @@ architecture:
     attributes:
         width: 384
         depth: 16
+        datawidth: 24
         n_rdwr_ports: 2
+        n_banks: 1
         
   - !Component
     name: B_Buffer
@@ -86,13 +88,6 @@ architecture:
       datawidth: 4
       width: 264
       depth: 1
-
-  # - !Component
-  #   name: scale_factor
-  #   <<<: [*component_defaults, *keep_weights]
-  #   subclass: custom_intmultiplier
-  #   attributes:
-  #     datawidth:8
       
   - !Component
     name: scale_factor_compute
