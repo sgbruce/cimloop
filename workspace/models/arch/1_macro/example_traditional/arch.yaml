@@ -38,10 +38,14 @@ architecture:
         depth: 512
         width: 136
         n_rdwr_ports: 1
+        
     - !Component
       name: PPU
       subclass: PPU
       <<<: [*component_defaults, *keep_outputs]
+      attributes:
+        width: 40
+        depth: INF
 
 
   - !Component # Each PE in the column receives a different filter row
@@ -73,14 +77,15 @@ architecture:
     attributes:
       width: 264
       depth: 128
-      banks: 1
       
   - !Component
     name: mac_weight_register
     <<<: [*component_defaults, *keep_weights]
     subclass: reg # for whatever reason, reg requires subclass
     attributes:
-      datawidth: 264
+      datawidth: 4
+      width: 264
+      depth: 1
 
   # - !Component
   #   name: scale_factor
@@ -96,14 +101,17 @@ architecture:
     attributes:
       # technology: TECHNOLOGY
       datawidth: 8
+      width: 16
+      depth: INF
 
   - !Component
     name: scale_factor_mult
     <<<: [*component_defaults, *keep_inputs, *keep_weights]
     subclass: intmultiplier
     attributes:
-      technology: TECHNOLOGY
       datawidth: 14
+      width: 28
+      depth: INF
 
   - !Component
     name: partial_sum_add
@@ -112,14 +120,21 @@ architecture:
     attributes:
       technology: TECHNOLOGY
       datawidth: 24
+      depth: INF
+      width: 48
+
+  - !Hierarchical
+    nodes: *virtualized_mac_without_mac_unit
 
   - !Component
     name: mac_op_4_bit
-    <<<: [*component_defaults, *keep_inputs, *keep_weights]
+    <<<: [*component_defaults]
     class: intmac
     attributes:
       technology: TECHNOLOGY
       datawidth: 4
+      width: 8
+      depth: INF
     spatial: {meshX: 64}
       
 

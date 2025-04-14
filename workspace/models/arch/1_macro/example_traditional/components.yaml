@@ -77,11 +77,10 @@ compound_components:
       technology: "must_specify"
       width: "must_specify"
       depth: "must_specify"
-      banks: "must_specify"
-      n_rw_ports: banks * 2
+      n_rw_ports: 2
 
     subcomponents: 
-    - name: storage[1..banks]
+    - name: storage
       class: SRAM
       attributes:
         width: width
@@ -102,15 +101,15 @@ compound_components:
     - name: read
       arguments:
         data_delta: 0..1
-        address_delta: 0..banks
+        address_delta: 0..1
       subcomponents:
-      - name: storage[1..banks]
+      - name: storage
         actions:
         - name: read
           arguments:
             data_delta: data_delta
             address_delta: address_delta
-      - name: address_generators
+      - name: address_generator
         actions:
         - name: add
     
@@ -145,62 +144,6 @@ compound_components:
         actions: [{name: read}]
       - name: address_generators
         actions: [{name: add}]
-    
-  - name: vec_mac
-    attributes:
-      technology: "must_specify"
-      datawidth: "must_specify"
-      num_macs: 256 / datawidth
-      quantization: 0
-      output_width: "must_specify"
-    subcomponents: 
-    - name: macs[1..num_macs]
-      class: mac_unit_csv
-      attributes:
-        width: datawidth
-        depth: 1
-    - name: partial_sum_adder
-      class: intadder
-      attributes: 
-        technology: technology
-        datawidth: 24
-    - name: vsq_scaling
-      attributes: 
-        technology: technology
-      subcomponents: 
-      - name: scale_scale_mult
-        class: intmultiplier
-        attributes: 
-          technology: technology
-          datawidth: 8
-      - name: scale_sum_mult
-        class: intmultiplier
-        attributes:
-          technology: technology
-          datawidth: 22
-      actions: 
-      - name: compute
-        subcomponents: 
-        - name: scale_scale_mult
-          actions: [{name: mult_random}]
-        - name: scale_sum_mult
-          actions: [{name: mult_random}]
-    actions: 
-    - name: compute
-      subcomponents:
-      - name: macs[1..num_macs]
-        actions: [{name: compute}]
-      - name: partial_sum_adder
-        actions: [{name: add}]
-      - name: vsq_scaling
-        actions: [{name: compute}]
-    - name: leak
-      subcomponents:
-      - name: macs[1..num_macs]
-        actions: [{name: leak}]
-      - name: partial_sum_adder
-        actions: [{name: leak}]
-
   - name: PPU
     attributes: 
       technology: "must_specify"
