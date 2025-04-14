@@ -6,6 +6,10 @@ architecture:
   - !Container # Macro top-level
     name: macro
     <<<: [*container_defaults]
+    attributes:
+      technology: 5
+      global_cycle_secods: 1
+      datawidth: 4
 
   - !Component # DRAM main memory
     name: DRAM
@@ -13,8 +17,8 @@ architecture:
     class: DRAM
     attributes:
       type: "LPDDR4"
-      width: 64
-      depth: INF
+      width: 264
+      depth: 4294967295
   
   - !Component
     name: global_pe
@@ -23,36 +27,26 @@ architecture:
     attributes: 
       scratchpad_width: 264
       scratchpad_depth: 4096
-    # constraints:
-    #   spatial:
-    #     factors: [C=1]
+      num_pes: 1
       
   - !Container # accelerator
     name: vsqutie
     <<<: [*container_defaults]
     # spatial: {meshX: 1, meshY: 1}  
-    constraints:
-      spatial:
-        factors: [C=1]
 
-  - !Hierarchical
-    nodes:
-    - !Component
-      name: output_buffer
-      <<<: [*component_defaults, *keep_outputs]
-      class: SRAM
-      attributes:
-        depth: 512
-        width: 136
-        n_rdwr_ports: 1
-      # constraints:
-      #   spatial:
-      #     factors: [C=1]
-        
-    - !Component
-      name: PPU
-      subclass: PPU
-      <<<: [*component_defaults, *keep_outputs]
+  - !Component
+    name: output_buffer
+    <<<: [*component_defaults, *keep_outputs]
+    class: SRAM
+    attributes:
+      depth: 512
+      width: 136
+      n_rdwr_ports: 1
+      
+  # - !Component
+  #   name: PPU
+  #   subclass: PPU
+  #   <<<: [*component_defaults, *keep_outputs]
 
 
   - !Component # Each PE in the column receives a different filter row
@@ -63,31 +57,21 @@ architecture:
       width: 384
       depth: 16
       n_rdwr_ports: 2
-    # constraints:
-    #   spatial:
-    #     factors: [C=1]
         
   - !Component
     name: B_Buffer
     <<<: [*component_defaults, *keep_inputs]
     subclass: B_Buffer
     attributes:
-      width: 16
-      depth: 1
+      width: 264
+      depth: 2048
       n_rw_ports: 2
-    # constraints:
-    #   spatial:
-    #     factors: [C=1,M=1]
 
   - !Container # vector lane w/ buffer
     name: vec_mac_lane
     <<<: [*container_defaults]
-    spatial:
-      meshX: 1
-    # constraints:
-    #   spatial:
-    #     permutation: [M]
-    #     factors: [C=1]
+    # spatial:
+    #   meshX: 1
 
   - !Component 
     name: A_Buffer
@@ -96,50 +80,39 @@ architecture:
     attributes:
       width: 264
       depth: 128
-      banks: 1
-    # constraints:
-    #   spatial:
-    #     factors: [C=1]
       
-  - !Component
-    name: mac_weight_register
-    <<<: [*component_defaults, *keep_weights]
-    subclass: reg # for whatever reason, reg requires subclass
-    attributes:
-      datawidth: 264
+  # - !Component
+  #   name: mac_weight_register
+  #   <<<: [*component_defaults, *keep_weights]
+  #   subclass: reg # for whatever reason, reg requires subclass
+  #   attributes:
+  #     datawidth: 264
       
-  - !Component
-    name: scale_factor_compute
-    <<<: [*component_defaults, *keep_inputs, *keep_weights]
-    subclass: intmultiplier
-    attributes:
-      # technology: TECHNOLOGY
-      datawidth: 8
+  # - !Component
+  #   name: scale_factor_compute
+  #   <<<: [*component_defaults, *keep_inputs, *keep_weights]
+  #   subclass: intmultiplier
+  #   attributes:
+  #     datawidth: 8
 
-  - !Component
-    name: scale_factor_mult
-    <<<: [*component_defaults, *keep_inputs, *keep_weights]
-    subclass: intmultiplier
-    attributes:
-      technology: TECHNOLOGY
-      datawidth: 14
+  # - !Component
+  #   name: scale_factor_mult
+  #   <<<: [*component_defaults, *keep_inputs, *keep_weights]
+  #   subclass: intmultiplier
+  #   attributes:
+  #     datawidth: 14
 
-  - !Component
-    name: partial_sum_add
-    <<<: [*component_defaults, *keep_outputs]
-    subclass: intadder
-    attributes:
-      technology: TECHNOLOGY
-      datawidth: 24
+  # - !Component
+  #   name: partial_sum_add
+  #   <<<: [*component_defaults, *keep_outputs]
+  #   subclass: intadder
+  #   attributes:
+  #     datawidth: 24
 
   - !Component
     name: mac_op_4_bit
-    <<<: [*component_defaults]
-    class: intmac
+    # <<<: [*component_defaults]
+    class: mac_unit_csv
     attributes:
-      technology: TECHNOLOGY
       datawidth: 4
     spatial: {meshX: 1}
-    # constraints:
-    #   spatial:
-    #     permutation: [K]

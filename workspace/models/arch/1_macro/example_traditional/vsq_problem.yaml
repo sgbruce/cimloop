@@ -1,0 +1,34 @@
+problem:
+  version: 0.4
+  shape:
+    name: MatrixMultiply
+    dimensions: [M, N, K]
+    data_spaces:
+    - name: Weights
+      projection:
+      - [[C]]
+      - [[M]]
+      - [[K]]
+    - name: Inputs
+      projection:
+      - [[N]]
+      - [[K]]
+    - name: Outputs
+      projection:
+      - [[C]]
+      - [[M]]
+      - [[N]]
+      read_write: True
+
+  instance:
+    C: 1
+    M: 8192
+    K: 8192
+    N: 8192
+    densities:
+      Weights:
+        distribution: "fixed_structured"
+        density: {{density_a|default(0.25)}} # Use density_a if specified, else use 0.25
+      Inputs:
+        distribution: "fixed_structured"
+        density: {{density_b|default(0.5)}} # Use density_b if specified, else use 0.5

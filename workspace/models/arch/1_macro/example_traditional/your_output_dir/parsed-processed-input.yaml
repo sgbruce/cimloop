@@ -1,0 +1,596 @@
+dumped_by_timeloop_front_end: true
+architecture:
+    version: '0.4'
+    subtree:
+      - name: macro_top_level
+        attributes:
+            version: '0.4'
+            technology: 5
+            global_cycle_secods: 1
+            datawidth: 4
+            has_power_gating: false
+            power_gated_at: null
+        local:
+          - name: DRAM[1..1]
+            class: DRAM
+            attributes:
+                type: "LPDDR4"
+                width: 264
+                depth: 4294967295
+                datawidth: 1
+                has_power_gating: false
+                n_banks: 2
+                cluster_size: 1
+                reduction_supported: true
+                multiple_buffering: 1
+                min_utilization: 0
+                allow_overbooking: false
+                meshX: 1
+                meshY: 1
+                technology: 5
+                global_cycle_secods: 1
+                power_gated_at: null
+            required_actions:
+              - write
+              - update
+              - read
+              - leak
+            enabled: true
+          - name: global_pe[1..1]
+            subclass: global_pe
+            attributes:
+                scratchpad_width: 264
+                scratchpad_depth: 4096
+                num_pes: 1
+                datawidth: 1
+                has_power_gating: false
+                n_banks: 2
+                cluster_size: 1
+                reduction_supported: true
+                multiple_buffering: 1
+                min_utilization: 0
+                allow_overbooking: false
+                meshX: 1
+                meshY: 1
+                technology: 5
+                global_cycle_secods: 1
+                power_gated_at: null
+            class: dummy_storage
+            required_actions:
+              - write
+              - update
+              - read
+              - leak
+            enabled: true
+          - name: output_buffer[1..1]
+            class: SRAM
+            attributes:
+                depth: 512
+                width: 136
+                n_rdwr_ports: 1
+                datawidth: 1
+                has_power_gating: false
+                n_banks: 2
+                cluster_size: 1
+                reduction_supported: true
+                multiple_buffering: 1
+                min_utilization: 0
+                allow_overbooking: false
+                meshX: 1
+                meshY: 1
+                technology: 5
+                global_cycle_secods: 1
+                power_gated_at: null
+            required_actions:
+              - write
+              - update
+              - read
+              - leak
+            enabled: true
+          - name: accumulator[1..1]
+            class: regfile
+            attributes:
+                width: 384
+                depth: 16
+                n_rdwr_ports: 2
+                datawidth: 1
+                has_power_gating: false
+                n_banks: 2
+                cluster_size: 1
+                reduction_supported: true
+                multiple_buffering: 1
+                min_utilization: 0
+                allow_overbooking: false
+                meshX: 1
+                meshY: 1
+                technology: 5
+                global_cycle_secods: 1
+                power_gated_at: null
+            required_actions:
+              - write
+              - update
+              - read
+              - leak
+            enabled: true
+          - name: B_Buffer[1..1]
+            subclass: B_Buffer
+            attributes:
+                width: 264
+                depth: 2048
+                n_rw_ports: 2
+                datawidth: 1
+                has_power_gating: false
+                n_banks: 2
+                cluster_size: 1
+                reduction_supported: true
+                multiple_buffering: 1
+                min_utilization: 0
+                allow_overbooking: false
+                meshX: 1
+                meshY: 1
+                technology: 5
+                global_cycle_secods: 1
+                power_gated_at: null
+            class: dummy_storage
+            required_actions:
+              - write
+              - update
+              - read
+              - leak
+            enabled: true
+          - name: A_Buffer[1..1]
+            subclass: A_Buffer
+            attributes:
+                width: 264
+                depth: 128
+                datawidth: 1
+                has_power_gating: false
+                n_banks: 2
+                cluster_size: 1
+                reduction_supported: true
+                multiple_buffering: 1
+                min_utilization: 0
+                allow_overbooking: false
+                meshX: 1
+                meshY: 1
+                technology: 5
+                global_cycle_secods: 1
+                power_gated_at: null
+            class: dummy_storage
+            required_actions:
+              - write
+              - update
+              - read
+              - leak
+            enabled: true
+          - name: mac_op_4_bit[1..1]
+            class: mac_unit_csv
+            attributes:
+                datawidth: 4
+                has_power_gating: false
+                meshX: 1
+                meshY: 1
+                technology: 5
+                global_cycle_secods: 1
+                power_gated_at: null
+            required_actions:
+              - compute
+            enabled: true
+architecture_constraints:
+    targets:
+      - rmw_first_update:
+          - Weights
+          - Inputs
+          - Outputs
+        type: temporal
+        target: DRAM
+      - rmw_first_update:
+          - Weights
+          - Inputs
+          - Outputs
+        type: temporal
+        target: global_pe
+      - rmw_first_update:
+          - Weights
+          - Inputs
+          - Outputs
+        type: temporal
+        target: output_buffer
+      - type: bypass
+        bypass:
+          - Inputs
+          - Weights
+        keep:
+          - Outputs
+        target: output_buffer
+      - rmw_first_update:
+          - Weights
+          - Inputs
+          - Outputs
+        type: temporal
+        target: accumulator
+      - type: bypass
+        bypass:
+          - Inputs
+          - Weights
+        keep:
+          - Outputs
+        target: accumulator
+      - rmw_first_update:
+          - Weights
+          - Inputs
+          - Outputs
+        type: temporal
+        target: B_Buffer
+      - type: bypass
+        bypass:
+          - Outputs
+          - Weights
+        keep:
+          - Inputs
+        target: B_Buffer
+      - rmw_first_update:
+          - Weights
+          - Inputs
+          - Outputs
+        type: temporal
+        target: A_Buffer
+      - type: bypass
+        bypass:
+          - Inputs
+          - Outputs
+        keep:
+          - Weights
+        target: A_Buffer
+problem:
+    version: '0.4'
+    shape:
+        name: MatrixMultiply
+        dimensions:
+          - M
+          - N
+          - K
+        data_spaces:
+          - name: Weights
+            projection:
+              -   -   - C
+              -   -   - M
+              -   -   - K
+            read_write: false
+          - name: Inputs
+            projection:
+              -   -   - N
+              -   -   - K
+            read_write: false
+          - name: Outputs
+            projection:
+              -   -   - C
+              -   -   - M
+              -   -   - N
+            read_write: true
+        coefficients: []
+    instance:
+        C: 1
+        M: 8192
+        K: 8192
+        N: 8192
+        densities:
+            Weights:
+                distribution: "fixed_structured"
+                density: 0.25
+                band_width: 0
+                workload_tensor_size: 0
+            Inputs:
+                distribution: "fixed_structured"
+                density: 0.5
+                band_width: 0
+                workload_tensor_size: 0
+compound_components:
+    version: '0.4'
+    classes:
+      - name: smartbuffer_sram_components_dot_yaml
+        attributes:
+            technology: "must_specify"
+            width: "must_specify"
+            depth: "must_specify"
+            n_rw_ports: 1
+            global_cycle_seconds: "must_specify"
+        subcomponents:
+          - name: storage
+            class: SRAM
+            attributes:
+                width: width
+                depth: depth
+                n_rw_ports: n_rw_ports
+                technology: technology
+                global_cycle_seconds: global_cycle_seconds
+          - name: address_generator
+            class: intadder
+            attributes:
+                n_instances: 2
+                n_bits: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                precision: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                datawidth: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                global_cycle_seconds: global_cycle_seconds
+        actions:
+          - name: write
+            subcomponents:
+              - name: storage
+                actions:
+                  - name: write
+              - name: address_generator
+                actions:
+                  - name: add
+          - name: read
+            subcomponents:
+              - name: storage
+                actions:
+                  - name: read
+              - name: address_generator
+                actions:
+                  - name: add
+          - name: leak
+            subcomponents:
+              - name: storage
+                actions:
+                  - name: leak
+              - name: address_generator
+                actions:
+                  - name: leak
+          - name: update
+            subcomponents:
+              - name: storage
+                actions:
+                  - name: write
+              - name: address_generator
+                actions:
+                  - name: add
+      - name: A_Buffer
+        attributes:
+            technology: "must_specify"
+            global_cycle_seconds: "must_specify"
+            width: "must_specify"
+            depth: "must_specify"
+            datawidth: 4
+            n_rw_ports: 2
+        subcomponents:
+          - name: storage
+            class: SRAM
+            attributes:
+                width: width
+                depth: depth
+                datawidth: 4
+                n_rw_ports: 2
+                technology: technology
+                global_cycle_seconds: global_cycle_seconds
+          - name: address_generator
+            class: intadder
+            attributes:
+                n_instances: 1
+                n_bits: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                precision: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                datawidth: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                global_cycle_seconds: global_cycle_seconds
+            energy_scale: 1/16
+        actions:
+          - name: read
+            arguments:
+                data_delta: 0..1
+                address_delta: 0..1
+            subcomponents:
+              - name: storage
+                actions:
+                  - name: read
+                    arguments:
+                        data_delta: data_delta
+                        address_delta: address_delta
+              - name: address_generators
+                actions:
+                  - name: add
+      - name: B_Buffer
+        attributes:
+            technology: "must_specify"
+            global_cycle_seconds: "must_specify"
+            width: "must_specify"
+            depth: "must_specify"
+            n_rw_ports: 2
+        subcomponents:
+          - name: storage
+            class: SRAM
+            attributes:
+                width: width
+                depth: depth
+                n_rw_ports: 2
+                technology: technology
+                global_cycle_seconds: global_cycle_seconds
+          - name: address_generator
+            class: intadder
+            attributes:
+                n_instances: 1
+                n_bits: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                precision: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                datawidth: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                global_cycle_seconds: global_cycle_seconds
+        actions:
+          - name: read
+            subcomponents:
+              - name: storage
+                actions:
+                  - name: read
+              - name: address_generators
+                actions:
+                  - name: add
+      - name: PPU
+        attributes:
+            technology: "must_specify"
+            global_cycle_seconds: "must_specify"
+        subcomponents:
+          - name: matrix_scaling[1..16]
+            class: intmultiplier
+            attributes:
+                technology: technology
+                datawidth: 40
+                global_cycle_seconds: global_cycle_seconds
+          - name: bias_addition[1..16]
+            class: intadder
+            attributes:
+                technology: technology
+                datawidth: 40
+                global_cycle_seconds: global_cycle_seconds
+          - name: relu[1..16]
+            class: comparator
+            attributes:
+                technology: technology
+                datawidth: 40
+                global_cycle_seconds: global_cycle_seconds
+          - name: truncation_vec_max[1..16]
+            class: bitwise
+            attributes:
+                technology: technology
+                datawidth: 40
+                global_cycle_seconds: global_cycle_seconds
+          - name: quantize_and_round[1..16]
+            class: bitwise
+            attributes:
+                technology: technology
+                datawidth: 40
+                global_cycle_seconds: global_cycle_seconds
+          - name: approx_softmax[1..16]
+            class: intmultiplier
+            attributes:
+                technology: technology
+                datawidth: 16
+                global_cycle_seconds: global_cycle_seconds
+          - name: scale_buffer
+            class: regfile
+            attributes:
+                technology: technology
+                width: 256
+                depth: 8
+                global_cycle_seconds: global_cycle_seconds
+          - name: bias_buffer
+            class: regfile
+            attributes:
+                technology: technology
+                width: 128
+                depth: 8
+                global_cycle_seconds: global_cycle_seconds
+          - name: vsq_buffer
+            class: regfile
+            attributes:
+                technology: technology
+                width: 296
+                depth: 16
+                global_cycle_seconds: global_cycle_seconds
+        actions:
+          - name: compute
+            subcomponents:
+              - name: matrix_scaling[1..16]
+                actions:
+                  - name: mult_random
+              - name: bias_addition[1..16]
+                actions:
+                  - name: add
+              - name: relu[1..16]
+                actions:
+                  - name: compare
+              - name: truncation_vec_max[1..16]
+                actions:
+                  - name: process
+              - name: quantize_and_round[1..16]
+                actions:
+                  - name: process
+              - name: approx_softmax[1..16]
+                actions:
+                  - name: mult_random
+              - name: scale_buffer
+                actions:
+                  - name: read
+              - name: bias_buffer
+                actions:
+                  - name: read
+              - name: vsq_buffer
+                actions:
+                  - name: read
+                  - name: write
+          - name: read_buffer
+            subcomponents:
+              - name: scale_buffer
+                actions:
+                  - name: write
+              - name: bias_buffer
+                actions:
+                  - name: write
+      - name: global_pe
+        attributes:
+            scratchpad_width: "must_specify"
+            scratchpad_depth: "must_specify"
+            num_pes: "must_specify"
+            technology: "must_specify"
+            global_cycle_seconds: "must_specify"
+        subcomponents:
+          - name: address_generator
+            class: intadder
+            attributes:
+                n_instances: 1
+                n_bits: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                precision: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                datawidth: max(1, ceil(log2(depth))) if depth >= 1 else 1
+                global_cycle_seconds: global_cycle_seconds
+          - name: scratchpad
+            class: SRAM
+            attributes:
+                width: scratchpad_width
+                depth: scratchpad_depth
+                technology: technology
+                global_cycle_seconds: global_cycle_seconds
+        actions:
+          - name: read
+            subcomponents:
+              - name: address_generator
+                actions:
+                  - name: add
+              - name: scratchpad
+                actions:
+                  - name: read
+          - name: write
+            subcomponents:
+              - name: address_generator
+                actions:
+                  - name: add
+              - name: scratchpad
+                actions:
+                  - name: write
+mapping: []
+mapper:
+    optimization_metrics:
+      - edp
+    version: '0.4'
+    live_status: false
+    num_threads: 1
+    search_size: 10000
+    victory_condition: 100
+    timeout: 10000
+    max_permutations_per_if_visit: 16
+    algorithm: random_pruned
+    max_temporal_loops_in_a_mapping: 14
+    diagnostics: false
+    out_prefix: timeloop-mapper
+    optimization_metric: []
+    sync_interval: null
+    log_interval: 1
+    log_oaves: false
+    log_oaves_mappings: false
+    log_stats: false
+    log_suboptimal: false
+    penalize_consecutive_bypass_fails: false
+    emit_whoop_nest: false
+    filter_revisits: false
+mapspace:
+    version: '0.4'
+    template: uber
+globals:
+    version: '0.4'
+    environment_variables: {}
+    expression_custom_functions: []
+    accelergy_plug_ins: []
