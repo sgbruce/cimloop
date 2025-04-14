@@ -138,7 +138,7 @@ def quick_run(
 ):
     spec = get_spec(
         macro=macro,
-        system="ws_dummy_buffer_one_macro",
+        system="none",
         max_utilization=True,
         **kwargs,
     )
@@ -148,7 +148,7 @@ def quick_run(
         if k not in variables:
             spec.variables[k] = spec.variables.pop(k)
 
-    return run_mapper(spec, accelergy_verbose=accelergy_verbose)
+    return run_mapper(spec, accelergy_verbose=True)
 
 
 def get_diagram(

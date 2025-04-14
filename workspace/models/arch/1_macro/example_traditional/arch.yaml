@@ -9,7 +9,7 @@ architecture:
 
   - !Component # DRAM main memory
     name: DRAM
-    <<<: [*component_defaults, *keep_inputs, *keep_outputs, *keep_weights]
+    <<<: [*component_defaults]
     class: DRAM
     attributes:
       type: "LPDDR4"
@@ -23,10 +23,17 @@ architecture:
     attributes: 
       scratchpad_width: 264
       scratchpad_depth: 4096
+    # constraints:
+    #   spatial:
+    #     factors: [C=1]
       
   - !Container # accelerator
     name: vsqutie
-    spatial: {meshX: 4, meshY: 4}
+    <<<: [*container_defaults]
+    # spatial: {meshX: 1, meshY: 1}  
+    constraints:
+      spatial:
+        factors: [C=1]
 
   - !Hierarchical
     nodes:
@@ -38,6 +45,10 @@ architecture:
         depth: 512
         width: 136
         n_rdwr_ports: 1
+      # constraints:
+      #   spatial:
+      #     factors: [C=1]
+        
     - !Component
       name: PPU
       subclass: PPU
@@ -49,9 +60,12 @@ architecture:
     <<<: [*component_defaults, *keep_outputs]
     class: regfile
     attributes:
-        width: 384
-        depth: 16
-        n_rdwr_ports: 2
+      width: 384
+      depth: 16
+      n_rdwr_ports: 2
+    # constraints:
+    #   spatial:
+    #     factors: [C=1]
         
   - !Component
     name: B_Buffer
@@ -61,14 +75,19 @@ architecture:
       width: 16
       depth: 1
       n_rw_ports: 2
+    # constraints:
+    #   spatial:
+    #     factors: [C=1,M=1]
 
   - !Container # vector lane w/ buffer
     name: vec_mac_lane
+    <<<: [*container_defaults]
     spatial:
-      meshX: 16
-    constraints:
-      spatial:
-        permutation: [M]
+      meshX: 1
+    # constraints:
+    #   spatial:
+    #     permutation: [M]
+    #     factors: [C=1]
 
   - !Component 
     name: A_Buffer
@@ -78,6 +97,9 @@ architecture:
       width: 264
       depth: 128
       banks: 1
+    # constraints:
+    #   spatial:
+    #     factors: [C=1]
       
   - !Component
     name: mac_weight_register
@@ -117,10 +139,7 @@ architecture:
     attributes:
       technology: TECHNOLOGY
       datawidth: 4
-    spatial: {meshX: 64}
-    constraints:
-      spatial:
-        permutation: [K]
-      
-
-
+    spatial: {meshX: 1}
+    # constraints:
+    #   spatial:
+    #     permutation: [K]

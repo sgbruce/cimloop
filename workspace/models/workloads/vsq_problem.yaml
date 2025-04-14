@@ -6,6 +6,7 @@ problem:
     data_spaces:
     - name: Weights
       projection:
+      - [[C]]
       - [[M]]
       - [[K]]
     - name: Inputs
@@ -14,14 +15,16 @@ problem:
       - [[K]]
     - name: Outputs
       projection:
+      - [[C]]
       - [[M]]
       - [[N]]
       read_write: True
 
   instance:
-    M: 8
-    K: 8
-    N: 8
+    C: 1
+    M: 8192
+    K: 8192
+    N: 8192
     densities:
       Weights:
         distribution: "fixed_structured"
