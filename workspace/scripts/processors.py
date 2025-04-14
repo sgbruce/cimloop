@@ -62,7 +62,7 @@ class ArrayProcessor(tl.processors.Processor):
             raise ValueError(errstr) from e
 
     def expand_utilization(self, spec: tl.Specification):
-        expanded = {"C": 1, "M": 1}
+        expanded = {}#{"C": 1, "M": 1}
         instance = spec.problem.instance
         for l in spec.get_nodes_of_type(tl.arch.Leaf):
             if l.constraints.spatial.get("factors_only", None) is not None:

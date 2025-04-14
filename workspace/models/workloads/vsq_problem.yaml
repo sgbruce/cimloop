@@ -4,15 +4,15 @@ problem:
     name: MatrixMultiply
     dimensions: [M, N, K]
     data_spaces:
-    - name: A
+    - name: Weights
       projection:
       - [[M]]
       - [[K]]
-    - name: B
+    - name: Inputs
       projection:
       - [[N]]
       - [[K]]
-    - name: C
+    - name: Outputs
       projection:
       - [[M]]
       - [[N]]
@@ -23,9 +23,9 @@ problem:
     K: 8
     N: 8
     densities:
-      A:
+      Weights:
         distribution: "fixed_structured"
         density: {{density_a|default(0.25)}} # Use density_a if specified, else use 0.25
-      B:
+      Inputs:
         distribution: "fixed_structured"
         density: {{density_b|default(0.5)}} # Use density_b if specified, else use 0.5

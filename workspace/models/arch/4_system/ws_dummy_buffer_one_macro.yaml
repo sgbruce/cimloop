@@ -13,7 +13,7 @@ architecture:
     <<<: [*component_defaults]
     attributes: {depth: INF, width: 1}
     constraints:
-      dataspace: {keep_only: [B, C]}
+      dataspace: {keep_only: [Inputs, Outputs]}
       temporal: 
         permutation: [M, N, K] # Weight-stationary
 
@@ -21,4 +21,4 @@ architecture:
     name: macro_in_system
     <<<: [*container_defaults]
     spatial: {meshX: 1}
-    constraints: {spatial: {must_iterate_over_dataspaces: [A]}}
+    constraints: {spatial: {must_iterate_over_dataspaces: [Weights]}}

@@ -1,5 +1,5 @@
 helpful_macros_ignore:
-- &dataspaces [A, B, C]
+- &dataspaces [Weights, Inputs, Outputs]
 - &dimensions [M, N, K]
 
 - &container_defaults
@@ -9,7 +9,7 @@ helpful_macros_ignore:
       no_link_transfer: *dataspaces # No link transfers unless explicitly enabled
       split: 999     # Disable spatial XY by splitting at the max value. We're not using Timeloop's 2D model.
     temporal:
-      no_iteration_over_dataspaces: [A] # Weight-stationary by default
+      no_iteration_over_dataspaces: [Weights] # Weight-stationary by default
       rmw_first_update: ['*']
 
 - &component_defaults
@@ -36,14 +36,14 @@ helpful_macros_ignore:
 - &spatial_reuse     {}
 - &no_spatial_reuse  {constraints: {spatial: {no_reuse : ["*"]}}}
 
-- &keep_inputs       {constraints: {dataspace: {keep_only: [B]}}}
-- &keep_outputs      {constraints: {dataspace: {keep_only: [C]}}}
-- &keep_weights      {constraints: {dataspace: {keep_only: [A]}}}
+- &keep_inputs       {constraints: {dataspace: {keep_only: [Inputs]}}}
+- &keep_outputs      {constraints: {dataspace: {keep_only: [Outputs]}}}
+- &keep_weights      {constraints: {dataspace: {keep_only: [Weights]}}}
 - &keep_nothing      {constraints: {dataspace: {keep_only: []}}}
 
-- &spatial_must_reuse_outputs {constraints: {spatial: {no_reuse: [B, A],  no_iteration_over_dataspaces: [C]}}}
-- &spatial_must_reuse_inputs  {constraints: {spatial: {no_reuse: [C, A], no_iteration_over_dataspaces: [B]}}}
-- &spatial_must_reuse_weights {constraints: {spatial: {no_reuse: [B, C],  no_iteration_over_dataspaces: [A]}}}
+- &spatial_must_reuse_outputs {constraints: {spatial: {no_reuse: [Inputs, Weights],  no_iteration_over_dataspaces: [Outputs]}}}
+- &spatial_must_reuse_inputs  {constraints: {spatial: {no_reuse: [Outputs, Weights], no_iteration_over_dataspaces: [Inputs]}}}
+- &spatial_must_reuse_weights {constraints: {spatial: {no_reuse: [Inputs, Outputs],  no_iteration_over_dataspaces: [Weights]}}}
 
 - &no_temporal_iteration
   constraints:

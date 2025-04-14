@@ -43,7 +43,7 @@ architecture:
   nodes:
   # Except for macro, each of the following  are included iff they are defined
   # and not 'none'. macro must be defined.
-  # By default, set system to ws_dummy_buffer_one_macro
+  # By default, set system to _none
   {% if system is defined and system and system != 'none' %}
   - !Hierarchical 
     nodes: {{include('arch/4_system/' ~ system ~ '.yaml', 'architecture.nodes')}}
