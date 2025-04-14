@@ -62,7 +62,7 @@ def get_spec(
     macro: str,
     tile: str = None,
     chip: str = None,
-    system: str = "ws_dummy_buffer_one_macro",
+    system: str = "none",
     iso: str = None,
     dnn: str = None,
     layer: str = None,
@@ -160,7 +160,7 @@ def get_diagram(
 ):
     spec = get_spec(
         macro=macro,
-        system="ws_dummy_buffer_one_macro",
+        system="none",
         max_utilization=True,
         **kwargs,
     )

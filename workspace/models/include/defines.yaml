@@ -1,16 +1,15 @@
 helpful_macros_ignore:
-- &dataspaces [Inputs, Outputs, Weights]
-- &dimensions [N, P, Q, X, C, M, R, S, Y, Z, G]
+- &dataspaces [A, B, C]
+- &dimensions [M, N, K]
 
 - &container_defaults
   constraints:
     spatial:
       permutation: *dimensions # Spatial permutation usually doesn't matter. Lock them to shrink mapspace.
       no_link_transfer: *dataspaces # No link transfers unless explicitly enabled
-      factors: [X=1] # Don't temporally iterate over input bits unless we specify it
       split: 999     # Disable spatial XY by splitting at the max value. We're not using Timeloop's 2D model.
     temporal:
-      no_iteration_over_dataspaces: [Weights] # Weight-stationary by default
+      no_iteration_over_dataspaces: [A] # Weight-stationary by default
       rmw_first_update: ['*']
 
 - &component_defaults
@@ -37,14 +36,14 @@ helpful_macros_ignore:
 - &spatial_reuse     {}
 - &no_spatial_reuse  {constraints: {spatial: {no_reuse : ["*"]}}}
 
-- &keep_inputs       {constraints: {dataspace: {keep_only: [Inputs]}}}
-- &keep_outputs      {constraints: {dataspace: {keep_only: [Outputs]}}}
-- &keep_weights      {constraints: {dataspace: {keep_only: [Weights]}}}
+- &keep_inputs       {constraints: {dataspace: {keep_only: [B]}}}
+- &keep_outputs      {constraints: {dataspace: {keep_only: [C]}}}
+- &keep_weights      {constraints: {dataspace: {keep_only: [A]}}}
 - &keep_nothing      {constraints: {dataspace: {keep_only: []}}}
 
-- &spatial_must_reuse_outputs {constraints: {spatial: {no_reuse: [Inputs, Weights],  no_iteration_over_dataspaces: [Outputs]}}}
-- &spatial_must_reuse_inputs  {constraints: {spatial: {no_reuse: [Outputs, Weights], no_iteration_over_dataspaces: [Inputs]}}}
-- &spatial_must_reuse_weights {constraints: {spatial: {no_reuse: [Inputs, Outputs],  no_iteration_over_dataspaces: [Weights]}}}
+- &spatial_must_reuse_outputs {constraints: {spatial: {no_reuse: [B, A],  no_iteration_over_dataspaces: [C]}}}
+- &spatial_must_reuse_inputs  {constraints: {spatial: {no_reuse: [C, A], no_iteration_over_dataspaces: [B]}}}
+- &spatial_must_reuse_weights {constraints: {spatial: {no_reuse: [B, C],  no_iteration_over_dataspaces: [A]}}}
 
 - &no_temporal_iteration
   constraints:
@@ -52,17 +51,6 @@ helpful_macros_ignore:
 
 - &dummy             {<<<: [*component_defaults, *no_temporal_iteration, *no_coalesce, *keep_nothing], attributes: {width: 1, depth: 1, datawidth: 1}}
 
-- &spatial_map_all_weights
-  constraints:
-    spatial:
-      maximize_dims:
-      - [Y]    # Bits first
-      - [R, S] # Different values in the same filter
-      - [M, C] # Different filters
-      - [G]    # Different groups
-      - [P, Q] # Done mapping weights, let's parallelize output values
-      - [N]    # Different inputs in a batch
-      split: 999
 
 # =============================================================================
 # The following macros are used in CiM component attributes. They are
@@ -195,26 +183,3 @@ subcomponents_ignore:
           split: 999
     - !Component {name: here_to_fix_a_bug, <<<: *dummy}
 
-  # This is the CiM unit that stores weights and computes MACs. Each CiM
-  # unit stores a different weight slice of up to CIM_UNIT_WIDTH_CELLS
-  # bits. It may also store up to CIM_UNIT_DEPTH_CELLS independently-addressable
-  # weight slices, but may only compute MACs on one slice at a time.  
-  cim_unit: &cim_unit
-    name: cim_unit
-    <<<: [*component_defaults]
-    subclass: cell
-    attributes:
-      <<: *cim_component_attributes
-      width:       WEIGHT_BITS_PER_SLICE # NOT width ; we want reads to count
-      depth:       CIM_UNIT_DEPTH_CELLS  # fully even if underutilized
-      width_cells: CIM_UNIT_WIDTH_CELLS
-      depth_cells: CIM_UNIT_DEPTH_CELLS
-    # Override default temporal: We CAN iterate over weights here
-    constraints: !nomerge
-      dataspace: {keep_only: [Weights]}
-      temporal:
-        permutation: [C, M]
-        no_iteration_over_dataspaces: [] # Override default
-        maximize_dims_capacity: attributes.depth
-        maximize_dims: [C, M]
-        factors: [P=1, Q=1, R=1, S=1, N=1, X=1]
