@@ -10,7 +10,7 @@ architecture:
   - !Component # DRAM main memory
     name: DRAM
     <<<: [*component_defaults, *keep_inputs, *keep_outputs, *keep_weights]
-    class: DRAM
+    subclass: DRAM
     attributes:
       type: "LPDDR4"
       width: 64
@@ -33,7 +33,7 @@ architecture:
     - !Component
       name: output_buffer
       <<<: [*component_defaults, *keep_outputs]
-      class: SRAM
+      subclass: SRAM
       attributes:
         depth: 512
         width: 136
@@ -51,7 +51,7 @@ architecture:
   - !Component # Each PE in the column receives a different filter row
     name: accumulator
     <<<: [*component_defaults, *keep_outputs]
-    class: regfile
+    subclass: regfile
     attributes:
         width: 384
         depth: 16
@@ -124,7 +124,8 @@ architecture:
   - !Component
     name: mac_op_4_bit
     <<<: [*component_defaults]
-    class: intmac
+    class: mac
+    subclass: intmac
     attributes:
       technology: TECHNOLOGY
       datawidth: 4
