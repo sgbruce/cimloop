@@ -118,6 +118,18 @@ architecture:
       depth: INF
       width: 48
 
+    # TANNER:
+  # - !Component # The "read" energy of this component is whatever input & weight postprocessing is necessary 
+  #   name: input_weight_postprocessing
+  #   <<<: [*component_defaults, *keep_inputs, *keep_weights, *no_coalesce]
+  #   subclass: input_weight_postprocessing
+  #   attributes:
+  #     depth: INF
+  #     width: ENCODED_INPUT_BITS + ENCODED_WEIGHT_BITS # If this is the width, then you'll get one read per (1 input + 1 weight) that passes through here
+  #     # width: ENCODED_INPUT_BITS # If this is the width, then you'll get one read per (1 input) that passes through here
+  #     # width: ENCODED_WEIGHT_BITS # If this is the width, then you'll get one read per (1 weight) that passes through here
+  #   # You may also have 2 of these, one for outputs and one for weights 
+
   - !Hierarchical
     nodes: *virtualized_mac_without_mac_unit
 
