@@ -156,51 +156,58 @@ compound_components:
     attributes: 
       technology: "must_specify"
       global_cycle_seconds: "must_specify"
+      width: "must_specify"
     subcomponents: 
     - name: matrix_scaling[1..16]
       class: intmultiplier
       attributes: 
         technology: technology
-        datawidth: 40
+        width: width
+        depth: INF
     - name: bias_addition[1..16]
       class: intadder
       attributes:
         technology: technology
-        datawidth: 40
+        width: width
+        depth: INF
     - name: relu[1..16]
       class: comparator
       attributes:
         technology: technology
-        datawidth: 40
+        width: width
+        depth: INF
     - name: truncation_vec_max[1..16]
       class: bitwise
       attributes:
         technology: technology
-        datawidth: 40
+        width: width
+        depth: INF
     - name: quantize_and_round[1..16]
       class: bitwise
       attributes:
         technology: technology
-        datawidth: 40
+        width: width
+        depth: INF
     - name: approx_softmax[1..16]
       class: intmultiplier
       attributes:
         technology: technology
-        datawidth: 16
+        width: width
+        depth: INF
     - name: scale_buffer
-      class: regfile
+      class: aladdin_register
       attributes: 
         technology: technology
         width: 256
         depth: 8
     - name: bias_buffer
-      class: regfile
+      class: aladdin_register
       attributes: 
         technology: technology
         width: 128
         depth: 8
     - name: vsq_buffer
-      class: regfile
+      class: aladdin_register
       attributes: 
         technology: technology
         width: 296

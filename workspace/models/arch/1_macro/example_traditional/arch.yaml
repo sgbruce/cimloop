@@ -51,7 +51,7 @@ architecture:
   - !Component # Each PE in the column receives a different filter row
     name: accumulator
     <<<: [*component_defaults, *keep_outputs]
-    subclass: regfile
+    subclass: aladdin_register
     attributes:
         width: 384
         depth: 16
@@ -83,7 +83,7 @@ architecture:
   - !Component
     name: mac_weight_register
     <<<: [*component_defaults, *keep_weights]
-    subclass: reg # for whatever reason, reg requires subclass
+    subclass: aladdin_register
     attributes:
       datawidth: 4
       width: 264
@@ -94,8 +94,7 @@ architecture:
     <<<: [*component_defaults, *keep_inputs, *keep_weights]
     subclass: intmultiplier
     attributes:
-      # technology: TECHNOLOGY
-      datawidth: 8
+      # datawidth: 8
       width: 16
       depth: INF
 
@@ -104,7 +103,7 @@ architecture:
     <<<: [*component_defaults, *keep_inputs, *keep_weights]
     subclass: intmultiplier
     attributes:
-      datawidth: 14
+      # datawidth: 14
       width: 28
       depth: INF
 
@@ -114,7 +113,7 @@ architecture:
     subclass: intadder
     attributes:
       technology: TECHNOLOGY
-      datawidth: 24
+      # datawidth: 24
       depth: INF
       width: 48
 
@@ -140,7 +139,7 @@ architecture:
     subclass: intmac
     attributes:
       technology: TECHNOLOGY
-      datawidth: 4
+      # datawidth: 4
       width: 8
       depth: INF
     spatial: {meshX: 64}
