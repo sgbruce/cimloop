@@ -1,7 +1,7 @@
 problem_base_ignore: &problem_base
   version: 0.4
   instance:
-    N: BATCH_SIZE          # Batch size
+    N: BATCH_SIZE          # Batch size Y,S,R,X,W,H
 
     X: ENCODED_INPUT_BITS  # Input precision
     C: 1                   # Input channels

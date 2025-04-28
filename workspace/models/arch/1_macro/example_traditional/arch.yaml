@@ -9,7 +9,7 @@ architecture:
 
   - !Component # DRAM main memory
     name: DRAM
-    <<<: [*component_defaults, *keep_inputs, *keep_outputs, *keep_weights]
+    <<<: [*component_defaults]
     subclass: DRAM
     attributes:
       type: "LPDDR4"
@@ -38,6 +38,11 @@ architecture:
         depth: 512
         width: 136
         n_rdwr_ports: 1
+      constraints:
+        temporal:
+          permutation: [Y,X,S,R]
+          factors: [N=1, C=1]
+          
         
     - !Component
       name: PPU
@@ -46,6 +51,10 @@ architecture:
       attributes:
         width: 40
         depth: INF
+      constraints:
+        temporal:
+          permutation: [Y,X,S,R]
+          factors: [N=1, C=1, M=1]
 
 
   - !Component # Each PE in the column receives a different filter row
@@ -58,19 +67,30 @@ architecture:
         datawidth: 24
         n_rdwr_ports: 2
         n_banks: 1
+    constraints:
+      temporal:
+        permutation: [Y,X,S,R]
+        factors: [N=1, C=1, M=1]
         
   - !Component
     name: B_Buffer
     <<<: [*component_defaults, *keep_inputs]
     subclass: B_Buffer
     attributes:
-      width: 16
-      depth: 1
+      width: 264
+      depth: 2048
       n_rw_ports: 2
+    constraints:
+      temporal:
+        permutation: [Y,X,S,R]
+        factors: [N=1, C=1]
 
   - !Container # vector lane w/ buffer
     name: vec_mac_lane
     spatial: {meshX: 16}
+    constraints:
+      spatial:
+        factors: [N=1, C=1, M=1, S=1, P=1, Q=1]
 
   - !Component 
     name: A_Buffer
@@ -79,6 +99,10 @@ architecture:
     attributes:
       width: 264
       depth: 128
+    constraints:
+      temporal:
+        permutation: [Y,X,S,R]
+        factors: [N=1, M=1]
       
   - !Component
     name: mac_weight_register
