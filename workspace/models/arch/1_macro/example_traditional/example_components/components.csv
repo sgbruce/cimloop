@@ -6,9 +6,9 @@ technology,width,action,energy,area,global_cycle_seconds,comment
 
 COMPONENT: mac_unit_csv
 technology,width,action,energy,area,global_cycle_seconds,comment
-65nm,8,compute,1,10000,1,energy in pJ;  area in um^2
-65nm,8,read|write|update,1,10000,1,energy in pJ;  area in um^2
-65nm,8,leak,0,10000,1
+65nm,8,compute,2,30,1,energy in pJ;  area in um^2
+65nm,8,read|write|update,1,30,1,energy in pJ;  area in um^2
+65nm,8,leak,0,30,1
 
 COMPONENT: output_quantizer
 technology,width,action,energy,area,global_cycle_seconds,comment

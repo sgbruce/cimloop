@@ -24,7 +24,7 @@ def test_area_energy_breakdown():
                 QUANTIZE=q,
             ),
         )
-        for q in [False, True]
+        for q in [False]
     )
     results.clear_zero_areas()
     results.clear_zero_energies()

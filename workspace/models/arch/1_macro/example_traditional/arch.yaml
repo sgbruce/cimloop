@@ -16,17 +16,17 @@ architecture:
       width: 64
       depth: INF
   
-  - !Component
-    name: global_pe
-    <<<: [*component_defaults]
-    subclass: global_pe
-    attributes: 
-      width: 264
-      depth: 4096
+  # - !Component
+  #   name: global_pe
+  #   <<<: [*component_defaults]
+  #   subclass: global_pe
+  #   attributes: 
+  #     width: 264
+  #     depth: 4096
       
   - !Container # accelerator
     name: vsqutie
-    spatial: {meshX: 4, meshY: 4}
+    spatial: {meshX: 1, meshY: 1}
 
   - !Hierarchical
     nodes:
@@ -40,21 +40,21 @@ architecture:
         n_rdwr_ports: 1
       constraints:
         temporal:
-          permutation: [Y,X,S,R]
-          factors: [N=1, C=1]
+          permutation: [X, P, S, R]
+          factors: [N=1]
           
         
     - !Component
       name: PPU
-      subclass: PPU
       <<<: [*component_defaults, *keep_outputs]
+      subclass: PPU
       attributes:
         width: 40
         depth: INF
       constraints:
         temporal:
-          permutation: [Y,X,S,R]
-          factors: [N=1, C=1, M=1]
+          permutation: [X,P, S, R]
+          factors: [N=1]
 
 
   - !Component # Each PE in the column receives a different filter row
@@ -69,7 +69,7 @@ architecture:
         n_banks: 1
     constraints:
       temporal:
-        permutation: [Y,X,S,R]
+        permutation: [X, P, S, R]
         factors: [N=1, C=1, M=1]
         
   - !Component
@@ -82,7 +82,7 @@ architecture:
       n_rw_ports: 2
     constraints:
       temporal:
-        permutation: [Y,X,S,R]
+        permutation: [X,P,S, R]
         factors: [N=1, C=1]
 
   - !Container # vector lane w/ buffer
@@ -90,7 +90,7 @@ architecture:
     spatial: {meshX: 16}
     constraints:
       spatial:
-        factors: [N=1, C=1, M=1, S=1, P=1, Q=1]
+        factors: [N=1, C=1, M=1, S=1, P=1, Q=1, R=16]
 
   - !Component 
     name: A_Buffer
@@ -101,7 +101,7 @@ architecture:
       depth: 128
     constraints:
       temporal:
-        permutation: [Y,X,S,R]
+        permutation: [X,P, S, R]
         factors: [N=1, M=1]
       
   - !Component
@@ -112,33 +112,36 @@ architecture:
       datawidth: 4
       width: 264
       depth: 1
+    # constraints:
+    #   temporal:
+    #     permutation: [X,R,S]
       
   - !Component
     name: scale_factor_compute
-    <<<: [*component_defaults, *keep_inputs, *keep_weights]
+    <<<: [*component_defaults, *no_temporal_reuse]
     subclass: aladdin_multiplier
     attributes:
       # datawidth: 8
-      width: 16
+      width: 8
       depth: INF
 
   - !Component
     name: scale_factor_mult
-    <<<: [*component_defaults, *keep_inputs, *keep_weights]
+    <<<: [*component_defaults, *no_temporal_reuse]
     subclass: aladdin_multiplier
     attributes:
       # datawidth: 14
-      width: 28
+      width: 12
       depth: INF
 
   - !Component
     name: partial_sum_add
-    <<<: [*component_defaults, *keep_outputs]
+    <<<: [*component_defaults, *no_temporal_reuse]
     subclass: aladdin_adder
     attributes:
       # datawidth: 24
       depth: INF
-      width: 48
+      width: 24
 
     # TANNER:
   # - !Component # The "read" energy of this component is whatever input & weight postprocessing is necessary 
@@ -157,14 +160,16 @@ architecture:
 
   - !Component
     name: mac_op_4_bit
-    # <<<: [*component_defaults]
     class: mac
     subclass: mac_unit_csv
     attributes:
       # datawidth: 4
-      width: 8
+      width: 4
       depth: INF
     spatial: {meshX: 64}
+    constraints:
+      spatial:
+        factors: [S=64]
       
 
 
