@@ -162,63 +162,63 @@ compound_components:
     subcomponents: 
     - name: matrix_scaling[1..16]
       <<<: [*component_defaults]
-      subclass: aladdin_multiplier
+      class: aladdin_multiplier
       attributes: 
         technology: technology
         width: width
         depth: INF
     - name: bias_addition[1..16]
       <<<: [*component_defaults]
-      subclass: aladdin_adder
+      class: aladdin_adder
       attributes:
         technology: technology
         width: width
         depth: INF
     - name: relu[1..16]
       <<<: [*component_defaults]
-      subclass: comparator
+      class: comparator
       attributes:
         technology: technology
         width: width
         depth: INF
     - name: truncation_vec_max[1..16]
       <<<: [*component_defaults]
-      subclass: bitwise
+      class: bitwise
       attributes:
         technology: technology
         width: width
         depth: INF
     - name: quantize_and_round[1..16]
       <<<: [*component_defaults]
-      subclass: bitwise
+      class: bitwise
       attributes:
         technology: technology
         width: width
         depth: INF
     - name: approx_softmax[1..16]
       <<<: [*component_defaults]
-      subclass: aladdin_multiplier
+      class: aladdin_multiplier
       attributes:
         technology: technology
         width: width
         depth: INF
     - name: scale_buffer
       <<<: [*component_defaults]
-      subclass: aladdin_register
+      class: aladdin_register
       attributes: 
         technology: technology
         width: 256
         depth: 8
     - name: bias_buffer
       <<<: [*component_defaults]
-      subclass: aladdin_register
+      class: aladdin_register
       attributes: 
         technology: technology
         width: 128
         depth: 8
     - name: vsq_buffer
       <<<: [*component_defaults]
-      subclass: aladdin_register
+      class: aladdin_register
       attributes: 
         technology: technology
         width: 296
