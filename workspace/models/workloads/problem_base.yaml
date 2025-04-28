@@ -10,8 +10,8 @@ problem_base_ignore: &problem_base
     G: 1                   # Groups
 
     Y: ENCODED_WEIGHT_BITS # Weight precision
-    R: 1                   # Weight height
-    S: 1                   # Weight width
+    R: 2048                   # Weight height
+    S: 2048                   # Weight width
     Hdilation: 1           # (Conv) Height dilation
     Hstride: 1             # (Conv) Height stride
     Wdilation: 1           # (Conv) Width dilation
@@ -19,7 +19,7 @@ problem_base_ignore: &problem_base
 
     Z: ENCODED_OUTPUT_BITS # Output precision
     M: 1                   # Output channels
-    P: 1                   # Output height
+    P: 2048                   # Output height
     Q: 1                   # Output width
   shape:
     coefficients:
@@ -30,34 +30,34 @@ problem_base_ignore: &problem_base
     data_spaces:
     - name: Weights
       projection:
-      - - - C
-      - - - M
+      # - - - C
+      # - - - M
       - - - R
       - - - S
       - - - Y
-      - - - G
+      # - - - G
     - name: Inputs
       projection:
       - - - N
-      - - - C
-      - - - R
-          - Wdilation
-        - - P
-          - Wstride
+      # - - - C
       - - - S
-          - Hdilation
-        - - Q
-          - Hstride
+          # - Wdilation
+        - - P
+      #     - Wstride
+      # - - - S
+      #     - Hdilation
+      #   - - Q
+      #     - Hstride
       - - - X
-      - - - G
+      # - - - G
     - name: Outputs
       projection:
       - - - N
-      - - - M
-      - - - Q
+      # - - - M
+      - - - R
       - - - P
       - - - Z
-      - - - G
+      # - - - G
       read_write: true
     dimensions:
     - C
