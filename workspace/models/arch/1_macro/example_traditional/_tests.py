@@ -21,10 +21,10 @@ def test_area_energy_breakdown():
         utl.delayed(utl.quick_run)(
             macro=MACRO_NAME,
             variables=dict(
-                QUANTIZE=q,
+                VOLTAGE=v,
             ),
         )
-        for q in [False]
+        for v in [0.5, .6, .8, .9, 1]
     )
     results.clear_zero_areas()
     results.clear_zero_energies()
