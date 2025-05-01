@@ -1,0 +1,8 @@
+sparse_optimizations:
+  targets:
+  - target: mac_op_4_bit
+    compute_optimization:
+    - type: skipping
+      options:
+      - target: Outputs
+        condition_on: [Inputs, Weights]

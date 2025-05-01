@@ -8,13 +8,12 @@ variables:
   # Workload, microarch, circuits. Things that should be matched
   # between architectures when comparing.
   # ===========================================================================
-  ## Workload -----------------------------------------------------------------
+  ## Workload ----------------------------------------------------------------
   WEIGHT_BITS: 4
   INPUT_BITS:  4
   OUTPUT_BITS: 4
   BATCH_SIZE:  1
-  DATA_WIDTH: 8
-  OUTPUT_WIDTH: 24
+  NUM_VEC_MAC: 64
 
 
   # Set by CiM processor if these values are available in the workload.
@@ -29,7 +28,7 @@ variables:
   SUPPORTED_OUTPUT_BITS: 16      # Maximum output bits supported by the arch.
 
   # Circuits ------------------------------------------------------------------
-  VOLTAGE: 1
+  VOLTAGE: 0.67
   TECHNOLOGY: 5 # nm
   VOLTAGE_ENERGY_SCALE: (VOLTAGE / 27) ** 2
   VOLTAGE_LATENCY_SCALE: 1 / VOLTAGE

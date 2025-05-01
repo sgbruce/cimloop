@@ -109,7 +109,7 @@ architecture:
     <<<: [*component_defaults, *keep_weights]
     subclass: aladdin_register
     attributes:
-      datawidth: 4
+      # datawidth: 4
       width: 264
       depth: 1
     # constraints:
@@ -163,10 +163,9 @@ architecture:
     class: mac
     subclass: mac_unit_csv
     attributes:
-      # datawidth: 4
-      width: 4
+      width: INPUT_BITS
       depth: INF
-    spatial: {meshX: 64}
+    spatial: {meshX: NUM_VEC_MAC}
     constraints:
       spatial:
         factors: [S=64]
