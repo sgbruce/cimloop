@@ -1,0 +1,3 @@
+l{{include_text('defines.yaml')}}
+mapping:
+  - target: global_pe

@@ -16,13 +16,13 @@ architecture:
       width: 64
       depth: INF
   
-  # - !Component
-  #   name: global_pe
-  #   <<<: [*component_defaults]
-  #   subclass: global_pe
-  #   attributes: 
-  #     width: 264
-  #     depth: 4096
+  - !Component
+    name: global_pe
+    <<<: [*component_defaults]
+    subclass: global_pe
+    attributes: 
+      width: 264
+      depth: 4096
       
   - !Container # accelerator
     name: vsqutie

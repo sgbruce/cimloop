@@ -289,7 +289,7 @@ compound_components:
     subcomponents:
     - name: address_generator
       <<<: [*component_defaults]
-      subclass: aladdin_adder
+      class: aladdin_adder
       attributes:
         n_instances: 1
         n_bits: max(1, ceil(log2(depth))) if depth >= 1 else 1
