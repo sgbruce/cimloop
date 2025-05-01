@@ -26,7 +26,8 @@ architecture:
       
   - !Container # accelerator
     name: vsqutie
-    spatial: {meshX: 1, meshY: 1}
+    spatial: {meshX: 4, meshY: 4}
+    max_utilization: {spatial: {factors: [('R=' + str(vsqutie.get_fanout()))]}}
 
   - !Hierarchical
     nodes:
@@ -44,17 +45,17 @@ architecture:
           factors: [N=1]
           
         
-    - !Component
-      name: PPU
-      <<<: [*component_defaults, *keep_outputs]
-      subclass: PPU
-      attributes:
-        width: 40
-        depth: INF
-      constraints:
-        temporal:
-          permutation: [X,P, S, R]
-          factors: [N=1]
+    # - !Component
+    #   name: PPU
+    #   <<<: [*component_defaults, *keep_outputs]
+    #   subclass: PPU
+    #   attributes:
+    #     width: 40
+    #     depth: INF
+    #   constraints:
+    #     temporal:
+    #       permutation: [X,P, S, R]
+    #       factors: [N=1]
 
 
   - !Component # Each PE in the column receives a different filter row
@@ -90,7 +91,8 @@ architecture:
     spatial: {meshX: 16}
     constraints:
       spatial:
-        factors: [N=1, C=1, M=1, S=1, P=1, Q=1, R=16]
+        factors: [N=1, C=1, M=1, S=16, P=1, Q=1, R=16]
+    max_utilization: {spatial: {factors: [('R=' + str(vec_mac_lane.get_fanout()))]}}
 
   - !Component 
     name: A_Buffer
@@ -169,6 +171,6 @@ architecture:
     constraints:
       spatial:
         factors: [S=64]
-      
+    max_utilization: {spatial: {factors: [('S=' + str(mac_op_4_bit.get_fanout()))]}}
 
 

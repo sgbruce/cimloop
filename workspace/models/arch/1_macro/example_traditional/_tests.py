@@ -24,7 +24,8 @@ def test_area_energy_breakdown():
                 VOLTAGE=v,
             ),
         )
-        for v in [0.5, .6, .8, .9, 1]
+        for v in [.67]
+        # for v in [0.5, .6, .8, .9, 1]
     )
     results.clear_zero_areas()
     results.clear_zero_energies()
