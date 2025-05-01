@@ -45,17 +45,18 @@ architecture:
           factors: [N=1]
           
         
-    # - !Component
-    #   name: PPU
-    #   <<<: [*component_defaults, *keep_outputs]
-    #   subclass: PPU
-    #   attributes:
-    #     width: 40
-    #     depth: INF
-    #   constraints:
-    #     temporal:
-    #       permutation: [X,P, S, R]
-    #       factors: [N=1]
+    - !Component
+      name: PPU
+      <<<: [*component_defaults, *keep_outputs]
+      subclass: PPU
+      energy_scale: 1/16 # would prefer to parameterize on banks(1/banks), but number is static 16
+      attributes:
+        width: 40
+        depth: INF
+      constraints:
+        temporal:
+          permutation: [X,P, S, R]
+          factors: [N=1]
 
 
   - !Component # Each PE in the column receives a different filter row

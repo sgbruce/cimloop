@@ -176,21 +176,21 @@ compound_components:
         depth: INF
     - name: relu[1..16]
       <<<: [*component_defaults]
-      class: comparator
+      class: aladdin_comparator
       attributes:
         technology: technology
         width: width
         depth: INF
     - name: truncation_vec_max[1..16]
       <<<: [*component_defaults]
-      class: bitwise
+      class: aladdin_adder
       attributes:
         technology: technology
         width: width
         depth: INF
     - name: quantize_and_round[1..16]
       <<<: [*component_defaults]
-      class: bitwise
+      class: aladdin_adder
       attributes:
         technology: technology
         width: width
@@ -234,9 +234,9 @@ compound_components:
       - name: relu[1..16]
         actions: [{name: compare}]
       - name: truncation_vec_max[1..16]
-        actions: [{name: process}]
+        actions: [{name: add}]
       - name: quantize_and_round[1..16]
-        actions: [{name: process}]
+        actions: [{name: add}]
       - name: approx_softmax[1..16]
         actions: [{name: multiply}]
       - name: scale_buffer
