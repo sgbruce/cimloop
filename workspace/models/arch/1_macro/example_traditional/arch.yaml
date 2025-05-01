@@ -13,8 +13,13 @@ architecture:
     subclass: DRAM
     attributes:
       type: "LPDDR4"
-      width: 64
+      width: 264
       depth: INF
+    constraints:
+      temporal:  
+        permutation: [X, C, P, M]
+        factors_only: [P=4]
+    max_utilization: {temporal: {factors: ['P=4']}}
   
   # - !Component
   #   name: global_pe
@@ -24,10 +29,21 @@ architecture:
   #     width: 264
   #     depth: 4096
       
-  - !Container # accelerator
-    name: vsqutie
-    spatial: {meshX: 4, meshY: 4}
-    max_utilization: {spatial: {factors: [('R=' + str(vsqutie.get_fanout()))]}}
+  # - !Container # accelerator
+  #   name: vsqutieX
+  #   spatial: {meshX: 4}
+  #   constraints:
+  #     spatial:
+  #       split: 999
+  #   max_utilization: {spatial: {factors: [('M=' + str(vsqutieX.get_fanout()))]}}
+  
+  # - !Container # accelerator
+  #   name: vsqutieY
+  #   spatial: {meshY: 4}
+  #   constraints:
+  #     spatial:
+  #       split: 0
+  #   max_utilization: {spatial: {factors: [('M=' + str(vsqutieY.get_fanout()))]}}
 
   - !Hierarchical
     nodes:
@@ -41,38 +57,37 @@ architecture:
         n_rdwr_ports: 1
       constraints:
         temporal:
-          permutation: [X, P, S, R]
-          factors: [N=1]
+          factors_only: []
           
         
     - !Component
       name: PPU
-      <<<: [*component_defaults, *keep_outputs]
+      <<<: [*component_defaults, *keep_outputs, *no_coalesce]
       subclass: PPU
-      energy_scale: 1/16 # would prefer to parameterize on banks(1/banks), but number is static 16
+      #energy_scale: 1/16 # would prefer to parameterize on banks(1/banks), but number is static 16
       attributes:
         width: 40
         depth: INF
       constraints:
         temporal:
-          permutation: [X,P, S, R]
+          permutation: [X, C, P, M]
           factors: [N=1]
 
 
   - !Component # Each PE in the column receives a different filter row
     name: accumulator
-    <<<: [*component_defaults, *keep_outputs]
+    <<<: [*component_defaults]
     subclass: aladdin_register
     attributes:
-        width: 384
-        depth: 16
-        datawidth: 24
-        n_rdwr_ports: 2
-        n_banks: 1
+      width: 384
+      depth: 16
+      datawidth: 24
+      n_rdwr_ports: 2
+      n_banks: 1
     constraints:
-      temporal:
-        permutation: [X, P, S, R]
-        factors: [N=1, C=1, M=1]
+      dataspace:
+        bypass: [Weights, Inputs]
+        
         
   - !Component
     name: B_Buffer
@@ -84,16 +99,18 @@ architecture:
       n_rw_ports: 2
     constraints:
       temporal:
-        permutation: [X,P,S, R]
-        factors: [N=1, C=1]
+        permutation: [X,C, P, M]
+        factors: [P=16]
+    max_utilization: {temporal: {factors: ['P=16']}}
 
   - !Container # vector lane w/ buffer
     name: vec_mac_lane
     spatial: {meshX: 16}
     constraints:
       spatial:
-        factors: [N=1, C=1, M=1, S=16, P=1, Q=1, R=16]
-    max_utilization: {spatial: {factors: [('R=' + str(vec_mac_lane.get_fanout()))]}}
+        split: 999
+        factors: [N=1, C=1, S=1, C=1, P=1, Q=1, M=16]
+    max_utilization: {spatial: {factors: [('M=' + str(vec_mac_lane.get_fanout()))]}}
 
   - !Component 
     name: A_Buffer
@@ -104,8 +121,10 @@ architecture:
       depth: 128
     constraints:
       temporal:
-        permutation: [X,P, S, R]
-        factors: [N=1, M=1]
+        permutation: [X, P, C, M]
+        maximize_dims_capacity: 64
+        maximize_dims: [[C],[M]]
+    max_utilization: {temporal: {factors: ['M=4']}}
       
   - !Component
     name: mac_weight_register
@@ -115,9 +134,11 @@ architecture:
       # datawidth: 4
       width: 264
       depth: 1
-    # constraints:
-    #   temporal:
-    #     permutation: [X,R,S]
+    constraints:
+      temporal:
+        no_iteration_over_dataspaces: [Weights]
+    #     factors_only: [M=16]
+    # max_utilization: {temporal: {factors: ['M=16']}}
       
   - !Component
     name: scale_factor_compute
@@ -139,7 +160,7 @@ architecture:
 
   - !Component
     name: partial_sum_add
-    <<<: [*component_defaults, *no_temporal_reuse]
+    <<<: [*component_defaults, *no_temporal_reuse, *keep_outputs]
     subclass: aladdin_adder
     attributes:
       # datawidth: 24
@@ -161,6 +182,15 @@ architecture:
   - !Hierarchical
     nodes: *virtualized_mac_without_mac_unit
 
+  - !Container
+    name: mac_container
+    spatial: {meshX: NUM_VEC_MAC}
+    constraints:
+      spatial:
+        split: 999
+        factors_only: [('C=' + str(NUM_VEC_MAC))]
+    max_utilization: {spatial: {factors: [('C=' + str(mac_container.get_fanout()))]}}
+
   - !Component
     name: mac_op_4_bit
     class: mac
@@ -168,10 +198,5 @@ architecture:
     attributes:
       width: INPUT_BITS
       depth: INF
-    spatial: {meshX: NUM_VEC_MAC}
-    constraints:
-      spatial:
-        factors: [S=64]
-    max_utilization: {spatial: {factors: [('S=' + str(mac_op_4_bit.get_fanout()))]}}
 
 
