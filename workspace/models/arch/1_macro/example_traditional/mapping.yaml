@@ -1,3 +1,65 @@
-l{{include_text('defines.yaml')}}
 mapping:
-  - target: global_pe
+  - target: output_buffer
+    type: temporal
+    factors: 
+    - N=1
+    permutation: [X, P, S, R]
+  
+  - target: PPU
+    type: temporal
+    factors: 
+    - N=1
+    permutation: [X, P, S, R]
+
+  - target: accumulator
+    type: temporal
+    factors: 
+    - N=1
+    - C=1
+    - M=1
+    permutation: [X, P, S, R]
+
+  - target: B_Buffer
+    type: temporal
+    factors: 
+    - N=1
+    - C=1
+    permutation: [X, P, S, R]
+  
+  - target: vec_mac_lane
+    type: spatial
+    factors: 
+    - N=1
+    - C=1
+    - M=1
+    - S=16
+    - P=1
+    - Q=1
+    - R=16
+  
+  - target: A_Buffer
+    type: temporal
+    factors: 
+    - N=1
+    - M=1
+    permutation: [X, P, S, R]
+
+  - target: mac_weight_register
+    type: temporal
+    factors: 
+    - N=1
+    - M=1
+    - S=64
+    permutation: [X, P, S, R]
+
+  - target: mac_op_4_bit
+    type: spatial
+    factors: 
+    - S=64
+
+  
+
+  
+  
+  
+  
