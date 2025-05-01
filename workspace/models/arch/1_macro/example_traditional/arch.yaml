@@ -18,8 +18,8 @@ architecture:
     constraints:
       temporal:  
         permutation: [X, C, P, M]
-        factors_only: [P=4]
-    max_utilization: {temporal: {factors: ['P=4']}}
+        factors: [X=1,Y=1,Z=1]
+    max_utilization: {temporal: {factors: ['P=16','C=16','M=16']}}
   
   # - !Component
   #   name: global_pe
@@ -84,9 +84,9 @@ architecture:
       datawidth: 24
       n_rdwr_ports: 2
       n_banks: 1
-    constraints:
-      dataspace:
-        bypass: [Weights, Inputs]
+    # constraints:
+    #   dataspace:
+    #     bypass: [Weights, Inputs]
         
         
   - !Component
@@ -137,7 +137,7 @@ architecture:
     constraints:
       temporal:
         no_iteration_over_dataspaces: [Weights]
-    #     factors_only: [M=16]
+        factors_only: [M=1]
     # max_utilization: {temporal: {factors: ['M=16']}}
       
   - !Component
