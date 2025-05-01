@@ -228,7 +228,7 @@ compound_components:
       name: compute
       subcomponents: 
       - name: matrix_scaling[1..16]
-        actions: [{name: mult_random}]
+        actions: [{name: multiply}]
       - name: bias_addition[1..16]
         actions: [{name: add}]
       - name: relu[1..16]
@@ -238,7 +238,7 @@ compound_components:
       - name: quantize_and_round[1..16]
         actions: [{name: process}]
       - name: approx_softmax[1..16]
-        actions: [{name: mult_random}]
+        actions: [{name: multiply}]
       - name: scale_buffer
         actions: [{name: read}]
       - name: bias_buffer
