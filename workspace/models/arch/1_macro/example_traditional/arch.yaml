@@ -64,7 +64,7 @@ architecture:
       name: PPU
       <<<: [*component_defaults, *keep_outputs, *no_coalesce]
       subclass: PPU
-      #energy_scale: 1/16 # would prefer to parameterize on banks(1/banks), but number is static 16
+      energy_scale: 1/64 # would prefer to parameterize on banks(1/banks), but number is static 16
       attributes:
         width: 40
         depth: INF
@@ -76,14 +76,16 @@ architecture:
 
   - !Component # Each PE in the column receives a different filter row
     name: accumulator
-    <<<: [*component_defaults]
+    <<<: [*component_defaults, *keep_outputs]
     subclass: aladdin_register
     attributes:
       width: 384
       depth: 16
-      datawidth: 24
       n_rdwr_ports: 2
-      n_banks: 1
+      # datawidth: 8
+    energy_scale: 210
+      # datawidth: 24
+      # n_banks: 1
     # constraints:
     #   dataspace:
     #     bypass: [Weights, Inputs]
@@ -102,6 +104,7 @@ architecture:
         permutation: [X,C, P, M]
         factors: [P=16]
     max_utilization: {temporal: {factors: ['P=16']}}
+    energy_scale: .8
 
   - !Container # vector lane w/ buffer
     name: vec_mac_lane
@@ -125,6 +128,7 @@ architecture:
         maximize_dims_capacity: 64
         maximize_dims: [[C],[M]]
     max_utilization: {temporal: {factors: ['M=4']}}
+    energy_scale: 0.15
       
   - !Component
     name: mac_weight_register

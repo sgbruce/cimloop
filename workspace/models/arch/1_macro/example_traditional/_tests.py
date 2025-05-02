@@ -27,6 +27,9 @@ def test_area_energy_breakdown():
         for v in [.67]
         # for v in [0.5, .6, .8, .9, 1]
     )
+    results.combine_per_component_energy(
+        ["A_Buffer", "mac_weight_register"], "A_Buffer"
+    )
     results.clear_zero_areas()
     results.clear_zero_energies()
     return results
