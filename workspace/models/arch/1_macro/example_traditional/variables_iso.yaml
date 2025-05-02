@@ -9,11 +9,11 @@ variables:
   # between architectures when comparing.
   # ===========================================================================
   ## Workload ----------------------------------------------------------------
-  WEIGHT_BITS: 4
-  INPUT_BITS:  4
-  OUTPUT_BITS: 4
+  WEIGHT_BITS: 8
+  INPUT_BITS:  8
+  OUTPUT_BITS: 8
   BATCH_SIZE:  1
-  NUM_VEC_MAC: 64
+  NUM_VEC_MAC: 32
 
 
   # Set by CiM processor if these values are available in the workload.

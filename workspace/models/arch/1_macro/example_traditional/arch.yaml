@@ -125,9 +125,9 @@ architecture:
     constraints:
       temporal:
         permutation: [X, P, C, M]
-        maximize_dims_capacity: 64
+        maximize_dims_capacity: 128
         maximize_dims: [[C],[M]]
-    max_utilization: {temporal: {factors: ['M=4']}}
+    max_utilization: {temporal: {factors: ['M=8']}}
     energy_scale: 0.15
       
   - !Component
