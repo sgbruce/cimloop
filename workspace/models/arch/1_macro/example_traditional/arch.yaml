@@ -21,29 +21,33 @@ architecture:
         factors: [X=1,Y=1,Z=1]
     max_utilization: {temporal: {factors: ['P=16','C=4','M=16']}}
   
-  # - !Component
-  #   name: global_pe
-  #   <<<: [*component_defaults]
-  #   subclass: global_pe
-  #   attributes: 
-  #     width: 264
-  #     depth: 4096
+  - !Component
+    name: global_pe
+    <<<: [*component_defaults]
+    subclass: global_pe
+    attributes: 
+      width: 264
+      depth: GLOBAL_PE_SIZE
       
-  # - !Container # accelerator
-  #   name: vsqutieX
-  #   spatial: {meshX: 4}
-  #   constraints:
-  #     spatial:
-  #       split: 999
-  #   max_utilization: {spatial: {factors: [('M=' + str(vsqutieX.get_fanout()))]}}
+  - !Container # accelerator
+    name: vsqutieX
+    spatial: {meshX: PE_MESH_X}
+    constraints:
+      spatial:
+        split: 999
+    max_utilization: {spatial: {factors: [('P=' + str(vsqutieX.get_fanout()))]},
+    temporal: {factors: [('M=' + str(vsqutieX.get_fanout())), ('C=' + str(vsqutieX.get_fanout()))]}
+    }
   
-  # - !Container # accelerator
-  #   name: vsqutieY
-  #   spatial: {meshY: 4}
-  #   constraints:
-  #     spatial:
-  #       split: 0
-  #   max_utilization: {spatial: {factors: [('M=' + str(vsqutieY.get_fanout()))]}}
+  - !Container # accelerator
+    name: vsqutieY
+    spatial: {meshY: PE_MESH_Y}
+    constraints:
+      spatial:
+        split: 0
+    max_utilization: {spatial: {factors: [('P=' + str(vsqutieY.get_fanout()))]},
+    temporal: {factors: [('M=' + str(vsqutieY.get_fanout())), ('C=' + str(vsqutieY.get_fanout()))]}
+    }
 
   - !Hierarchical
     nodes:
@@ -74,16 +78,16 @@ architecture:
           factors_only: []
 
 
-  - !Component # Each PE in the column receives a different filter row
-    name: accumulator
-    <<<: [*component_defaults, *keep_outputs]
-    subclass: aladdin_register
-    attributes:
-      width: 384
-      depth: 16
-      n_rdwr_ports: 2
-      # datawidth: 8
-    energy_scale: 210
+  # - !Component # Each PE in the column receives a different filter row
+  #   name: accumulator
+  #   <<<: [*component_defaults, *keep_outputs]
+  #   subclass: aladdin_register
+  #   attributes:
+  #     width: 384
+  #     depth: 16
+  #     n_rdwr_ports: 2
+  #     # datawidth: 8
+  #   energy_scale: 210
         
         
   - !Component
@@ -100,6 +104,17 @@ architecture:
         factors: [X=1,Y=1,Z=1]
     max_utilization: {temporal: {factors: ['P=16']}}
     energy_scale: .8
+
+  - !Component # Each PE in the column receives a different filter row
+    name: accumulator
+    <<<: [*component_defaults, *keep_outputs]
+    subclass: aladdin_register
+    attributes:
+      width: 384
+      depth: 16
+      n_rdwr_ports: 2
+      # datawidth: 8
+    energy_scale: 210
 
   - !Container # vector lane w/ buffer
     name: vec_mac_lane
@@ -120,7 +135,7 @@ architecture:
     constraints:
       temporal:
         permutation: [C,P, M]
-        maximize_dims_capacity: 64
+        maximize_dims_capacity: 256
         maximize_dims: [[C],[P],[M]]
         factors: [X=1,Y=1,Z=1]
     energy_scale: 0.15
