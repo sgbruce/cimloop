@@ -6,6 +6,7 @@ architecture:
   - !Container # Macro top-level
     name: macro
     <<<: [*container_defaults]
+    # max_utilization: {temporal: {factors: ['P=32','C=128','M=32']}}
 
   - !Component # DRAM main memory
     name: DRAM
@@ -17,33 +18,43 @@ architecture:
       depth: INF
     constraints:
       temporal:  
-        permutation: [X, C, P, M]
+        permutation: [C, P, M]
         factors: [X=1,Y=1,Z=1]
-    max_utilization: {temporal: {factors: ['P=16','C=16','M=16']}}
+    max_utilization: {temporal: {factors: ['P=16','C=4','M=16']}}
   
-  # - !Component
-  #   name: global_pe
-  #   <<<: [*component_defaults]
-  #   subclass: global_pe
-  #   attributes: 
-  #     width: 264
-  #     depth: 4096
+  - !Component
+    name: global_pe
+    <<<: [*component_defaults]
+    subclass: global_pe
+    attributes: 
+      width: 264
+      depth: GLOBAL_PE_SIZE
+    constraints:
+      temporal:  
+        permutation: [C, P, M]
+        factors: [X=1,Y=1,Z=1]
       
-  # - !Container # accelerator
-  #   name: vsqutieX
-  #   spatial: {meshX: 4}
-  #   constraints:
-  #     spatial:
-  #       split: 999
-  #   max_utilization: {spatial: {factors: [('M=' + str(vsqutieX.get_fanout()))]}}
+  - !Container # accelerator
+    name: vsqutieX
+    spatial: {meshX: PE_MESH_X}
+    constraints:
+      spatial:
+        split: 999
+        factors_only: [P=8]
+    max_utilization: {spatial: {factors: [('P=' + str(vsqutieX.get_fanout()))]},
+    temporal: {factors: [('M=' + str(vsqutieX.get_fanout())), ('C=' + str(vsqutieX.get_fanout()))]}
+    }
   
-  # - !Container # accelerator
-  #   name: vsqutieY
-  #   spatial: {meshY: 4}
-  #   constraints:
-  #     spatial:
-  #       split: 0
-  #   max_utilization: {spatial: {factors: [('M=' + str(vsqutieY.get_fanout()))]}}
+  - !Container # accelerator
+    name: vsqutieY
+    spatial: {meshY: PE_MESH_Y}
+    constraints:
+      spatial:
+        split: 0
+        factors_only: [M=2]
+    max_utilization: {spatial: {factors: [('P=' + str(vsqutieY.get_fanout()))]},
+    temporal: {factors: [('M=' + str(vsqutieY.get_fanout())), ('C=' + str(vsqutieY.get_fanout()))]}
+    }
 
   - !Hierarchical
     nodes:
@@ -70,25 +81,20 @@ architecture:
         depth: INF
       constraints:
         temporal:
-          permutation: [X, C, P, M]
-          factors: [N=1]
+          permutation: [C, P, M]
+          factors_only: []
 
 
-  - !Component # Each PE in the column receives a different filter row
-    name: accumulator
-    <<<: [*component_defaults, *keep_outputs]
-    subclass: aladdin_register
-    attributes:
-      width: 384
-      depth: 16
-      n_rdwr_ports: 2
-      # datawidth: 8
-    energy_scale: 210
-      # datawidth: 24
-      # n_banks: 1
-    # constraints:
-    #   dataspace:
-    #     bypass: [Weights, Inputs]
+  # - !Component # Each PE in the column receives a different filter row
+  #   name: accumulator
+  #   <<<: [*component_defaults, *keep_outputs]
+  #   subclass: aladdin_register
+  #   attributes:
+  #     width: 384
+  #     depth: 16
+  #     n_rdwr_ports: 2
+  #     # datawidth: 8
+  #   energy_scale: 210
         
         
   - !Component
@@ -101,10 +107,21 @@ architecture:
       n_rw_ports: 2
     constraints:
       temporal:
-        permutation: [X,C, P, M]
-        factors: [P=16]
+        permutation: [C, P, M]
+        factors: [X=1,Y=1,Z=1]
     max_utilization: {temporal: {factors: ['P=16']}}
     energy_scale: .8
+
+  - !Component # Each PE in the column receives a different filter row
+    name: accumulator
+    <<<: [*component_defaults, *keep_outputs]
+    subclass: aladdin_register
+    attributes:
+      width: 384
+      depth: 16
+      n_rdwr_ports: 2
+      # datawidth: 8
+    energy_scale: 210
 
   - !Container # vector lane w/ buffer
     name: vec_mac_lane
@@ -112,7 +129,7 @@ architecture:
     constraints:
       spatial:
         split: 999
-        factors: [N=1, C=1, S=1, C=1, P=1, Q=1, M=16]
+        factors: [X=1,Y=1,Z=1, C=1, P=1, M=16]
     max_utilization: {spatial: {factors: [('M=' + str(vec_mac_lane.get_fanout()))]}}
 
   - !Component 
@@ -124,10 +141,10 @@ architecture:
       depth: 128
     constraints:
       temporal:
-        permutation: [X, P, C, M]
-        maximize_dims_capacity: 128
-        maximize_dims: [[C],[M]]
-    max_utilization: {temporal: {factors: ['M=8']}}
+        permutation: [C,P, M]
+        maximize_dims_capacity: 1024
+        maximize_dims: [[C],[P],[M]]
+        factors: [X=1,Y=1,Z=1]
     energy_scale: 0.15
       
   - !Component
@@ -141,7 +158,7 @@ architecture:
     constraints:
       temporal:
         no_iteration_over_dataspaces: [Weights]
-        factors_only: [M=1]
+        factors_only: []
     # max_utilization: {temporal: {factors: ['M=16']}}
       
   - !Component
