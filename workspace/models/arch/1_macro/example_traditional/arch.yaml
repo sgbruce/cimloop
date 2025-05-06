@@ -6,6 +6,7 @@ architecture:
   - !Container # Macro top-level
     name: macro
     <<<: [*container_defaults]
+    # max_utilization: {temporal: {factors: ['P=32','C=128','M=32']}}
 
   - !Component # DRAM main memory
     name: DRAM
@@ -28,6 +29,10 @@ architecture:
     attributes: 
       width: 264
       depth: GLOBAL_PE_SIZE
+    constraints:
+      temporal:  
+        permutation: [C, P, M]
+        factors: [X=1,Y=1,Z=1]
       
   - !Container # accelerator
     name: vsqutieX
@@ -35,6 +40,7 @@ architecture:
     constraints:
       spatial:
         split: 999
+        factors_only: [P=8]
     max_utilization: {spatial: {factors: [('P=' + str(vsqutieX.get_fanout()))]},
     temporal: {factors: [('M=' + str(vsqutieX.get_fanout())), ('C=' + str(vsqutieX.get_fanout()))]}
     }
@@ -45,6 +51,7 @@ architecture:
     constraints:
       spatial:
         split: 0
+        factors_only: [M=2]
     max_utilization: {spatial: {factors: [('P=' + str(vsqutieY.get_fanout()))]},
     temporal: {factors: [('M=' + str(vsqutieY.get_fanout())), ('C=' + str(vsqutieY.get_fanout()))]}
     }
@@ -135,7 +142,7 @@ architecture:
     constraints:
       temporal:
         permutation: [C,P, M]
-        maximize_dims_capacity: 256
+        maximize_dims_capacity: 1024
         maximize_dims: [[C],[P],[M]]
         factors: [X=1,Y=1,Z=1]
     energy_scale: 0.15

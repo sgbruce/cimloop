@@ -40,7 +40,7 @@ def test_area_energy_breakdown():
             ),
         )
         for v in [.67]
-        # for v in [0.5, .6, .8, .9, 1]
+        #for v in [0.5, .6, .8, .9, 1]
     )
     results.combine_per_component_energy(
         ["A_Buffer", "mac_weight_register"], "A_Buffer"
@@ -65,8 +65,8 @@ def test_system_config(PEs: int):
                 PE_MESH_Y=config[1],
             ),
         )
-        for config in unique_power_of_two_pairs(PEs, True)
-        # for v in [0.5, .6, .8, .9, 1]
+        for config in [[2,1], [2,2], [2,4], [2,8], [4,4],[8,2],[4,2]]
+        # for config in unique_power_of_two_pairs(PEs, True)
     )
     results.combine_per_component_energy(
         ["A_Buffer", "mac_weight_register"], "A_Buffer"
